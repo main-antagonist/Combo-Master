@@ -280,8 +280,10 @@ body.layout-portrait .wrap{max-width:680px}
 @media print{header,.nav-tabs,.btn,.btn-row,#toast,.modal-overlay,.cycle-bar,.in-sev-row,.ss-controls,.ct-plus,.it-del,.sc-del,.in-del-btn,.ses-nav,.add-slot,.add-step-btn,.card-picker{display:none!important}.tab-panel{display:block!important;border:none!important}body{background:#fff;color:#000;font-size:12pt}.panel,.viewer-step,.int-note,.flow-view{border-color:#ccc!important;background:#fff!important;box-shadow:none!important}h2,h3,h4,.vs-card-name,strong{color:#000!important}}
 /* ── Custom combobox (type-to-filter + scrollable) ── */
 .cm-combo-wrap{position:relative;flex:1;min-width:0}
-.cm-combo-input{width:100%;box-sizing:border-box;padding:6px 26px 6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--body-font);font-size:.82rem;cursor:text;line-height:1.4}
+.cm-combo-input{width:100%;box-sizing:border-box;padding:6px 42px 6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--body-font);font-size:.82rem;cursor:text;line-height:1.4}
 .cm-combo-input:focus{outline:none;border-color:var(--accent)}
+.cm-combo-clear{display:none;position:absolute;right:20px;top:50%;transform:translateY(-50%);background:none;border:none;color:#e55;cursor:pointer;font-size:.9rem;padding:0 2px;line-height:1}
+.cm-combo-clear.visible{display:block}
 .cm-combo-arrow{position:absolute;right:7px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:.6rem;color:var(--muted)}
 .cm-combo-drop{position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:600;background:var(--surface2);border:1px solid var(--accent);border-radius:6px;box-shadow:0 6px 24px rgba(0,0,0,.65);display:none;max-height:200px;overflow-y:auto;scrollbar-width:thin}
 .cm-combo-drop.open{display:block}
@@ -343,6 +345,7 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
         <select id="viewer-select" style="display:none"><option value="">— Select a combo —</option></select>
         <div class="cm-combo-wrap" id="viewer-combo-wrap">
           <input class="cm-combo-input" id="viewer-combo-input" placeholder="— Select or type a combo —" autocomplete="off">
+          <button class="cm-combo-clear" id="viewer-combo-clear">✕</button>
           <span class="cm-combo-arrow">▼</span>
           <div class="cm-combo-drop" id="viewer-combo-drop"></div>
         </div>
@@ -395,6 +398,7 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
         <select id="edit-select" style="display:none"><option value="">— Select combo —</option></select>
         <div class="cm-combo-wrap" id="editor-combo-wrap">
           <input class="cm-combo-input" id="editor-combo-input" placeholder="— Select or type a combo —" autocomplete="off">
+          <button class="cm-combo-clear" id="editor-combo-clear">✕</button>
           <span class="cm-combo-arrow">▼</span>
           <div class="cm-combo-drop" id="editor-combo-drop"></div>
         </div>
@@ -725,9 +729,21 @@ My Combo Name
       </div>
     </div>
     <div class="panel">
+      <h3>🌐 Image Proxy</h3>
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">
+        <button class="btn" id="proxyToggleBtn" onclick="toggleProxy()">Proxy: ON</button>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+        <input id="customProxyInput" class="txt" placeholder="Custom proxy URL (optional)" style="flex:1;min-width:180px">
+        <button class="btn" onclick="applyCustomProxy()">Set Proxy</button>
+      </div>
+      <p style="font-size:.75rem;color:var(--muted);margin-top:.4rem">Default: cmw.cm-v1.workers.dev — Leave blank to use default. Proxy OFF = direct YGOPRODeck.</p>
+    </div>
+    <div class="panel">
       <h3>⚠ Data Management</h3>
       <p style="font-size:.8rem;color:var(--muted);margin-bottom:.6rem">Only removes Combo Master data. Browser history and other sites: unaffected.</p>
       <button class="btn danger" id="btn-reset-data">🗑 Reset All Data</button>
+      <button class="btn" onclick="clearImageCache()" style="margin-left:.5rem">🖼 Clear Image Cache</button>
     </div>
   </div>
 
@@ -964,6 +980,47 @@ let S={
 };
 let toastT;
 function toast(m,t='ok',d=2800){const e=document.getElementById('toast');e.textContent=m;e.className=`show ${t}`;clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),d);}
+
+// ── Proxy settings ──
+let useProxy=true;
+let customProxy='';
+const defaultProxy='https://cmw.cm-v1.workers.dev/?url=';
+
+function buildImageUrl(directUrl){
+  if(!useProxy)return directUrl;
+  const base=customProxy||defaultProxy;
+  return base+encodeURIComponent(directUrl);
+}
+
+async function cmGetImage(url){
+  if(!url||url.startsWith('data:'))return url;
+  const key='cardImage_'+btoa(url).slice(0,40);
+  try{const cached=localStorage.getItem(key);if(cached)return cached;}catch{}
+  const fetchUrl=buildImageUrl(url);
+  const res=await fetch(fetchUrl);
+  const blob=await res.blob();
+  const base64=await new Promise(resolve=>{const r=new FileReader();r.onloadend=()=>resolve(r.result);r.readAsDataURL(blob);});
+  try{localStorage.setItem(key,base64);}catch{}
+  return base64;
+}
+
+function clearImageCache(){
+  Object.keys(localStorage).filter(k=>k.startsWith('cardImage_')).forEach(k=>localStorage.removeItem(k));
+  toast('Image cache cleared','ok');
+}
+
+function toggleProxy(){
+  useProxy=!useProxy;
+  const btn=document.getElementById('proxyToggleBtn');
+  if(btn)btn.textContent='Proxy: '+(useProxy?'ON':'OFF');
+}
+
+function applyCustomProxy(){
+  const v=document.getElementById('customProxyInput');
+  if(v)customProxy=v.value.trim();
+  toast(customProxy?'Custom proxy set':'Proxy reset to default','ok');
+}
+
 function sv(k,v){try{localStorage.setItem(SK+k,JSON.stringify(v));}catch(e){console.warn(e);}}
 function ld(k,fb=null){try{const v=localStorage.getItem(SK+k);return v!==null?JSON.parse(v):fb;}catch{return fb;}}
 function saveAll(){sv('combos',S.combos);sv('decklist',S.decklist);sv('savedDecks',S.savedDecks);sv('resources',S.resources);sv('imgSources',S.imgSources);sv('theme',S.themeIndex);sv('customTheme',S.customTheme);sv('bodyFont',S.bodyFont);sv('headFont',S.headFont);sv('cardScale',S.cardScale);sv('deckScale',S.deckScale);sv('deckSearchScale',S.deckSearchScale);sv('editorScale',S.editorScale);sv('editorSearchScale',S.editorSearchScale);sv('editorCustomScale',S.editorCustomScale);sv('cardSearchApiIdx',S.cardSearchApiIdx);sv('emojiScale',S.emojiScale);sv('uiScale',S.uiScale);sv('cardImgScale',S.cardImgScale);sv('iconImgScale',S.iconImgScale);sv('hiddenFonts',S.hiddenFonts);sv('deckSections',S.deckSections);sv('stepNumInline',S.stepNumInline);sv('layoutMode',S.layoutMode);}
@@ -1122,12 +1179,30 @@ function cmComboInit(inputId, dropId, selectId, onSelect){
   if(!inp||!drop||!sel)return;
   const key=inputId;
   _cmcState[key]={inputId,dropId,selectId,onSelect,kbIdx:-1};
+  // Clear button setup
+  const clrBtn=inp.closest('.cm-combo-wrap')?.querySelector('.cm-combo-clear');
+  function syncClear(){
+    if(clrBtn)clrBtn.classList.toggle('visible',inp.value!=='');
+  }
+  if(clrBtn){
+    clrBtn.addEventListener('click',e=>{
+      e.stopPropagation();
+      inp.value='';
+      sel.value='';
+      syncClear();
+      close();
+      cmComboRender(key,'');
+      drop.classList.add('open');
+      onSelect&&onSelect('');
+    });
+  }
   // Sync input display from hidden select's current value
   inp.value=sel.value?sel.options[sel.selectedIndex]?.text||'':'';
+  syncClear();
   function open(){cmComboRender(key,inp.value);drop.classList.add('open');}
   function close(){drop.classList.remove('open');_cmcState[key].kbIdx=-1;}
   inp.addEventListener('focus',()=>open());
-  inp.addEventListener('input',()=>{_cmcState[key].kbIdx=-1;cmComboRender(key,inp.value);drop.classList.add('open');});
+  inp.addEventListener('input',()=>{_cmcState[key].kbIdx=-1;syncClear();cmComboRender(key,inp.value);drop.classList.add('open');});
   inp.addEventListener('keydown',e=>{
     const items=drop.querySelectorAll('.cm-combo-item');
     if(e.key==='ArrowDown'){e.preventDefault();_cmcState[key].kbIdx=Math.min(_cmcState[key].kbIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('kb-focus',i===_cmcState[key].kbIdx));items[_cmcState[key].kbIdx]?.scrollIntoView({block:'nearest'});}
@@ -1142,6 +1217,7 @@ function cmComboRender(key,filter){
   const st=_cmcState[key];if(!st)return;
   const sel=document.getElementById(st.selectId);
   const drop=document.getElementById(st.dropId);
+  const inp=document.getElementById(st.inputId);
   if(!sel||!drop)return;
   const q=(filter||'').toLowerCase().trim();
   const opts=[...sel.options].filter(o=>o.value!==''&&(!q||o.text.toLowerCase().includes(q)))
@@ -1155,7 +1231,9 @@ function cmComboRender(key,filter){
     el.addEventListener('click',()=>{
       const val=el.dataset.value;
       sel.value=val;
-      document.getElementById(st.inputId).value=val?el.textContent:'';
+      inp.value=val?el.textContent:'';
+      const clrBtn=inp.closest('.cm-combo-wrap')?.querySelector('.cm-combo-clear');
+      if(clrBtn)clrBtn.classList.toggle('visible',inp.value!=='');
       drop.classList.remove('open');
       st.onSelect&&st.onSelect(val);
     });
@@ -1177,6 +1255,8 @@ function cmComboSetValue(inputId,val){
   sel.value=val;
   const opt=[...sel.options].find(o=>o.value===val);
   inp.value=val?(opt?.text||val):'';
+  const clrBtn=inp.closest('.cm-combo-wrap')?.querySelector('.cm-combo-clear');
+  if(clrBtn)clrBtn.classList.toggle('visible',inp.value!=='');
 }
 
 // ── Follow-up picker modal ──
@@ -1588,6 +1668,25 @@ function renderApiHelpPopup(){
     </div>
     <div style="margin:.5rem 0;border-top:1px solid var(--border)"></div>
     <div style="font-size:.68rem;color:var(--muted)">💡 If all online sources fail, switch to <b>Master Duel (offline)</b> — it works with no internet once loaded.</div>
+    <div style="margin:.6rem 0;border-top:1px solid var(--border)"></div>
+    <div style="font-weight:700;font-size:.76rem;margin-bottom:.35rem;color:var(--accent2)">📘 YAML‑Yugi (Background Enhancer)</div>
+    <div style="font-size:.68rem;line-height:1.5;color:var(--text)">
+      <div style="margin-bottom:.25rem"><b>Why it's not in the source list:</b></div>
+      <div style="color:var(--muted);margin-bottom:.35rem">
+        • YAML‑Yugi cannot search by name or fuzzy match — it only works with passcodes.<br>
+        • Combo Master uses YGOPRODeck fuzzy to get the passcode first.<br>
+        • Once the passcode is known, YAML‑Yugi adds extra metadata behind the scenes.<br>
+        • It enhances results rather than acting as a standalone source.
+      </div>
+      <div style="margin-bottom:.25rem"><b>How it works:</b></div>
+      <div style="color:var(--muted);background:var(--bg);padding:.3rem .4rem;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:.62rem;margin-bottom:.25rem;word-break:break-all">
+        https://cdn.jsdelivr.net/gh/DawnbrandBots/yaml-yugi@master/data/cards/&lt;passcode&gt;.json
+      </div>
+      <div style="color:var(--muted);font-size:.64rem">
+        Example: Dark Magician → 46986414.json | Blue-Eyes → 89631139.json | Monster Reborn → 5405694.json
+      </div>
+      <div style="color:var(--muted);margin-top:.3rem;font-size:.64rem">You never need to enter passcodes manually — the engine handles it automatically.</div>
+    </div>
   `;
 }
 
@@ -1608,6 +1707,120 @@ function setCardApi(idx){
   if(q.trim())handleCardSearch(q);
   toast('API: '+S.imgSources[idx]?.label,'ok',1800);
 }
+// ════════════════════════════════════════════════════════════════════
+// UNIFIED CARD FETCHING ENGINE
+// Single cmFetchCard(name) entry point with automatic fallback chain
+// 1) YGOPRODeck fuzzy + YAML-Yugi merge
+// 2) YGOPRODeck exact
+// 3) Master Duel (optional)
+// ════════════════════════════════════════════════════════════════════
+
+// Main entry point — unified fetch with fallback chain
+async function cmFetchCard(name){
+  if(!name)return null;
+  // 1) Try YGOPRODeck fuzzy + YAML-Yugi merge
+  const yamlMerged=await cmFetchFromYgoFuzzyAndYaml(name);
+  if(yamlMerged)return yamlMerged;
+  // 2) Fallback: YGOPRODeck exact
+  const exact=await cmFetchFromYgoExact(name);
+  if(exact)return exact;
+  // 3) Fallback: Master Duel offline
+  const md=await cmFetchFromMasterDuel(name);
+  if(md)return md;
+  // Total failure
+  console.warn('cmFetchCard: no sources returned a card for:',name);
+  return null;
+}
+
+// YGOPRODeck fuzzy + YAML-Yugi merge
+async function cmFetchFromYgoFuzzyAndYaml(cardName){
+  const ygourl=`https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(cardName)}`;
+  let ygocard=null;
+  let passcode=null;
+  try{
+    const res=await fetch(ygourl);
+    if(!res.ok)return null;
+    const data=await res.json();
+    ygocard=data.data?.[0];
+    passcode=ygocard?.id?.toString();
+  }catch(e){
+    console.error('YGOPRODeck fuzzy failed:',e);
+    return null;
+  }
+  if(!ygocard)return null;
+  // Try YAML-Yugi per-card
+  let yaml=null;
+  if(passcode){
+    yaml=await cmLoadYamlYugiPerCard(passcode);
+  }
+  return cmMergeCardData(ygocard,yaml,'YGOPRODeck Fuzzy',yaml?'YAML-Yugi':null);
+}
+
+// YGOPRODeck exact fallback
+async function cmFetchFromYgoExact(cardName){
+  const url=`https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(cardName)}`;
+  try{
+    const res=await fetch(url);
+    if(!res.ok)return null;
+    const data=await res.json();
+    const ygocard=data.data?.[0];
+    if(!ygocard)return null;
+    return cmMergeCardData(ygocard,null,'YGOPRODeck Exact',null);
+  }catch(e){
+    console.error('YGOPRODeck exact failed:',e);
+    return null;
+  }
+}
+
+// YAML-Yugi per-card loader
+async function cmLoadYamlYugiPerCard(passcode){
+  if(!passcode)return null;
+  const url=`https://cdn.jsdelivr.net/gh/DawnbrandBots/yaml-yugi@master/data/cards/${passcode}.json`;
+  try{
+    const res=await fetch(url);
+    if(!res.ok){
+      console.warn('YAML-Yugi: card not found:',passcode);
+      return null;
+    }
+    return await res.json();
+  }catch(e){
+    console.error('YAML-Yugi loader error:',e);
+    return null;
+  }
+}
+
+// Master Duel offline (optional stub)
+async function cmFetchFromMasterDuel(cardName){
+  // If you have a local MD dataset, hook it here.
+  // For now, return null as a safe stub.
+  return null;
+}
+
+// Unified merge function — combines data from multiple sources
+function cmMergeCardData(ygocard,yaml,primarySource,secondarySource){
+  return{
+    name:ygocard.name,
+    desc:(yaml&&yaml.desc)||ygocard.desc,
+    type:ygocard.type,
+    race:ygocard.race,
+    attribute:ygocard.attribute,
+    level:ygocard.level,
+    atk:ygocard.atk,
+    def:ygocard.def,
+    image_url:ygocard.card_images?.[0]?.image_url||null,
+    image_url_small:ygocard.card_images?.[0]?.image_url_small||null,
+    passcode:ygocard.id?.toString()||null,
+    sources:{
+      primary:primarySource,
+      secondary:secondarySource
+    },
+    raw:{
+      ygoprodeck:ygocard,
+      yaml_yugi:yaml||null
+    }
+  };
+}
+
 // ════════════════════════════════════════════════════════════════════
 // CARD ENGINE — cache + unified multi-API search + Master Duel
 // ════════════════════════════════════════════════════════════════════
