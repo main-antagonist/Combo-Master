@@ -997,23 +997,7 @@ function cmBuildProxiedUrl(url){
   return base+encodeURIComponent(url);
 }
 
-async function cmFetch(url,opts={},{isApi=false,isImage=false}={}){
-  const proxyOn=CM_PROXY_ENABLED||false;
-  const proxyApi=CM_PROXY_API_ENABLED;
-  const shouldProxy=
-    proxyOn &&
-    ((isApi&&proxyApi)||(isImage&&!isApi)); // images always respect CM_PROXY_ENABLED, APIs respect CM_PROXY_API_ENABLED
-
-  const finalUrl=shouldProxy?cmBuildProxiedUrl(url):url;
-
-  try{
-    const res=await fetch(finalUrl,opts);
-    return res;
-  }catch(e){
-    console.warn('cmFetch failed:',finalUrl,e);
-    return null;
-  }
-}
+// Legacy cmFetch removed; new cmFetch defined later.
 
 async function cmGetImage(url){
   if(!url||url.startsWith('data:'))return url;
@@ -1038,7 +1022,7 @@ function toggleProxy(){
   if(btn)btn.textContent='Proxy: '+(CM_PROXY_ENABLED?'ON':'OFF');
 }
 function toggleProxyAPI(on){CM_PROXY_API_ENABLED=!!on;console.log('Proxy API Calls:',CM_PROXY_API_ENABLED);}
-function toggleProxyImages(on){CM_PROXY_ENABLED=!!on;console.log('Proxy Images:',CM_PROXY_ENABLED);}
+// Legacy toggleProxyImages removed; new implementation defined later.
 function toggleProxyEverything(on){CM_PROXY_ENABLED=!!on;CM_PROXY_API_ENABLED=!!on;console.log('Proxy Everything:',CM_PROXY_ENABLED,CM_PROXY_API_ENABLED);}
 
 function applyCustomProxy(){
@@ -1741,84 +1725,8 @@ function setCardApi(idx){
 // 3) Master Duel (optional)
 // ════════════════════════════════════════════════════════════════════
 
-// Main entry point — unified fetch with fallback chain
-async function cmFetchCard(name){
-  if(!name)return null;
-  // 1) Try YGOPRODeck fuzzy + YAML-Yugi merge
-  const yamlMerged=await cmFetchFromYgoFuzzyAndYaml(name);
-  if(yamlMerged)return yamlMerged;
-  // 2) Fallback: YGOPRODeck exact
-  const exact=await cmFetchFromYgoExact(name);
-  if(exact)return exact;
-  // 3) Fallback: Master Duel offline
-  const md=await cmFetchFromMasterDuel(name);
-  if(md)return md;
-  // Total failure
-  console.warn('cmFetchCard: no sources returned a card for:',name);
-  return null;
-}
-
-// YGOPRODeck fuzzy + YAML-Yugi merge
-async function cmFetchFromYgoFuzzyAndYaml(cardName){
-  const ygourl=`https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(cardName)}`;
-  let ygocard=null;
-  let passcode=null;
-  try{
-    const res=await cmFetch(ygourl);
-    if(!res)return null;
-    const data=await res.json();
-    ygocard=data.data?.[0];
-    passcode=ygocard?.id?.toString();
-  }catch(e){
-    console.error('YGOPRODeck fuzzy failed:',e);
-    return null;
-  }
-  if(!ygocard)return null;
-  // Try YAML-Yugi per-card
-  let yaml=null;
-  if(passcode){
-    yaml=await cmLoadYamlYugiPerCard(passcode);
-  }
-  return cmMergeCardData(ygocard,yaml,'YGOPRODeck Fuzzy',yaml?'YAML-Yugi':null);
-}
-
-// YGOPRODeck exact fallback
-async function cmFetchFromYgoExact(cardName){
-  const url=`https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(cardName)}`;
-  try{
-    const res=await cmFetch(url)||await cmFetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(cardName)}&num=1`);
-    if(!res)return null;
-    const data=await res.json();
-    const ygocard=data.data?.[0];
-    if(!ygocard)return null;
-    return cmMergeCardData(ygocard,null,'YGOPRODeck Exact',null);
-  }catch(e){
-    console.error('YGOPRODeck exact failed:',e);
-    return null;
-  }
-}
-
-// YAML-Yugi per-card loader
-async function cmLoadYamlYugiPerCard(passcode){
-  if(!passcode)return null;
-  const url=`https://cdn.jsdelivr.net/gh/DawnbrandBots/yaml-yugi@master/data/cards/${passcode}.json`;
-  try{
-    const res=await cmFetch(url);
-    if(!res){console.warn('YAML-Yugi: card not found:',passcode);return null;}
-    return await res.json();
-  }catch(e){
-    console.error('YAML-Yugi loader error:',e);
-    return null;
-  }
-}
-
-// Master Duel offline (optional stub)
-async function cmFetchFromMasterDuel(cardName){
-  // If you have a local MD dataset, hook it here.
-  // For now, return null as a safe stub.
-  return null;
-}
-
+// ════════════════════════════════════════════════════════════════════════════
+// Legacy cmFetchCard fallback chain removed; new fetch logic is defined later.
 // Unified merge function — combines data from multiple sources
 function cmMergeCardData(ygocard,yaml,primarySource,secondarySource){
   return{
@@ -1889,37 +1797,7 @@ function cmYamlGetExact(name){
 }
 
 // ── Master Duel loader (on-demand) ──
-async function cmLoadMasterDuelDB(){
-  if(CM_MD_DB.length)return;
-  try{
-    // Primary: GitHub Pages (faster, more stable)
-    let res=await cmFetch('https://dawnbrandbots.github.io/yaml-yugi/master-duel-raw.json',{},{isApi:true});
-    
-    // Fallback: raw.githubusercontent.com if Pages fails
-    if(!res||!res.ok){
-      res=await cmFetch('https://raw.githubusercontent.com/DawnbrandBots/yaml-yugi/refs/heads/main/master-duel-raw.json',{},{isApi:true});
-    }
-    
-    if(!res||!res.ok){
-      console.warn('Master Duel DB HTTP error:',res&&res.status);
-      return;
-    }
-    
-    CM_MD_DB=await res.json();
-  }catch(e){console.warn('Master Duel DB JSON parse failed:',e);}
-}
-function cmMasterDuelSearch(name){
-  if(!CM_MD_DB.length)return[];
-  const q=name.toLowerCase();
-  return CM_MD_DB.filter(c=>(c.name?.en||c.en?.name||'').toLowerCase().includes(q)).slice(0,20)
-    .map(c=>{
-      const cname=c.name?.en||c.en?.name||'';
-      const pass=c.password||c.id||'';
-      const img=pass?`https://images.ygoprodeck.com/images/cards_small/${pass}.jpg`:
-                     (c.card_images?.[0]?.image_url_small||c.images?.[0]||'');
-      return{name:cname,img};
-    }).filter(c=>c.name);
-}
+// Legacy Master Duel loader block removed; new implementation defined later.
 
 // ── YGOPRODeck helpers ──
 const CM_YGOPRO='https://db.ygoprodeck.com/api/v7/cardinfo.php';
@@ -2134,34 +2012,7 @@ async function cmEnsureCardImageCached(name){
   }catch{return card.img;}
 }
 // ════════════════════════════════════════════════════════════════════
-async function fetchCards(q,grid,spin,forDeck){
-  spin.classList.add('show');grid.innerHTML='';
-  try{
-    // Deck Builder inherits API source from Editor
-    const apiIdx=S.cardSearchApiIdx||0;
-    const results=await cmSearch(q,apiIdx);
-    const normed=results.slice(0,24).filter(c=>c.name);
-    if(!normed.length){
-      const srcLabel=S.imgSources[S.cardSearchApiIdx||0]?.label||'API';
-      grid.innerHTML=`<div class="empty-msg" style="grid-column:1/-1">No results in ${esc(srcLabel)}.</div>`;
-    }
-    else{
-      const oc=forDeck?`addFromDeckSearch(this)`:`addCardFromSearch(this)`;
-      grid.innerHTML=normed.map(c=>{
-        const enc=JSON.stringify({name:c.name,imageUrl:c.img}).replace(/"/g,'&quot;');
-        return`<div class="card-thumb" draggable="true" data-card="${enc}" onclick="${oc}" title="${esc(c.name)}">${c.img?`<img src="${c.img}" onerror="this.style.display='none'" alt="${esc(c.name)}">`:''}<div class="ct-name">${esc(c.name)}</div><div class="ct-plus">+</div></div>`;
-      }).join('');
-      if(forDeck)grid.querySelectorAll('.card-thumb img').forEach(img=>{img.style.maxHeight=S.deckSearchScale+'px';});
-      else applyEditorSearchScale();
-      if(!forDeck)grid.querySelectorAll('.card-thumb').forEach(el=>el.addEventListener('dragstart',e=>{
-        _dragType='card';e.dataTransfer.setData('cardData',el.dataset.card.replace(/&quot;/g,'"'));e.dataTransfer.effectAllowed='copy';
-      }));
-    }
-  }catch(err){
-    console.warn('Card search error:',err);
-    grid.innerHTML=`<div class="empty-msg" style="grid-column:1/-1">Search failed — ${err.message||'API unavailable'}.</div>`;
-  }finally{spin.classList.remove('show');}
-}
+// Legacy Deck Builder search helper removed; new fetchCards implementation is defined later.
 function addCardFromSearch(el){try{addCardToSeq(JSON.parse(el.dataset.card.replace(/&quot;/g,'"')),true);}catch(e){console.error(e);}}
 function addFromDeckSearch(el){try{const d=JSON.parse(el.dataset.card.replace(/&quot;/g,'"'));addCardNameToDeck(d.name,1,d.imageUrl);}catch(e){console.error(e);}}
 function renderCustomCardGrid(){
@@ -2730,6 +2581,177 @@ window.hideFont=hideFont;window.removeCustomFont=removeCustomFont;
 window.addEmojiAsIcon=addEmojiAsIcon;window.openEmojiModal=openEmojiModal;
 window.addCardNameToDeck=addCardNameToDeck;window.setCardApi=setCardApi;
 window.cmGetCardByName=cmGetCardByName;window.cmEnsureCardImageCached=cmEnsureCardImageCached;window.cmCacheAllCards=cmCacheAllCards;
+
+// ── Proxy configuration ──
+let CM_PROXY_ENABLED = false;
+let CM_PROXY_API_ENABLED = false;
+let CM_PROXY_CUSTOM = "";
+let useProxy = false;
+let customProxy = "";
+
+// ── Centralized fetch wrapper ──
+function cmBuildProxiedUrl(url) {
+  const base = CM_PROXY_CUSTOM || customProxy || "https://cmw.cm-v1.workers.dev/?url=";
+  return base + encodeURIComponent(url);
+}
+
+async function cmFetch(url, opts = {}, { isApi = false, isImage = false } = {}) {
+  const proxyOn = CM_PROXY_ENABLED || useProxy;
+  const proxyApi = CM_PROXY_API_ENABLED;
+  const shouldProxy =
+    proxyOn && ((isApi && proxyApi) || (isImage && !isApi));
+
+  const finalUrl = shouldProxy ? cmBuildProxiedUrl(url) : url;
+
+  try {
+    const res = await fetch(finalUrl, opts);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res;
+  } catch (e) {
+    console.warn("cmFetch failed:", finalUrl, e);
+    return null;
+  }
+}
+
+// ── YGOPRODeck search with exact→fuzzy fallback ──
+async function cmSearchYGOPRODeck(name) {
+  let res = await cmFetch(
+    `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(name)}`,
+    {},
+    { isApi: true }
+  );
+  if (!res || !res.ok) {
+    res = await cmFetch(
+      `https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(name)}`,
+      {},
+      { isApi: true }
+    );
+  }
+  return res && res.ok ? res.json() : null;
+}
+
+// ── YGOPrices via Worker proxy ──
+async function cmFetchYGOPrices(name) {
+  const url = `https://yugiohprices.com/api/get_card_prices/${encodeURIComponent(name)}`;
+  const res = await cmFetch(url, {}, { isApi: true });
+  return res && res.ok ? res.json() : null;
+}
+
+// ── YAML‑Yugi loader ──
+async function cmLoadYamlYugiCards() {
+  const res = await cmFetch(
+    "https://dawnbrandbots.github.io/yaml-yugi/cards.json",
+    {},
+    { isApi: true }
+  );
+  if (!res || !res.ok) return [];
+  try {
+    return await res.json();
+  } catch (e) {
+    console.warn("YAML‑Yugi JSON parse failed:", e);
+    return [];
+  }
+}
+
+// ── Master Duel loader ──
+let CM_MD_DB = [];
+async function cmLoadMasterDuelDB() {
+  if (CM_MD_DB.length) return;
+  let res = await cmFetch(
+    "https://dawnbrandbots.github.io/yaml-yugi/master-duel-raw.json",
+    {},
+    { isApi: true }
+  );
+  if (!res || !res.ok) {
+    res = await cmFetch(
+      "https://raw.githubusercontent.com/dawnbrandbots/yaml-yugi/refs/heads/main/master-duel-raw.json",
+      {},
+      { isApi: true }
+    );
+  }
+  if (!res || !res.ok) return;
+  try {
+    CM_MD_DB = await res.json();
+  } catch (e) {
+    console.warn("Master Duel DB JSON parse failed:", e);
+  }
+}
+
+function cmMasterDuelSearch(name) {
+  if (!CM_MD_DB.length) return [];
+  const q = name.toLowerCase();
+  return CM_MD_DB
+    .filter(c => (c.name?.en || c.en?.name || "").toLowerCase().includes(q))
+    .slice(0, 20)
+    .map(c => {
+      const cname = c.name?.en || c.en?.name || "";
+      const pass = c.password || c.id || "";
+      const img = pass
+        ? `https://images.ygoprodeck.com/images/cards_small/${pass}.jpg`
+        : (c.card_images?.[0]?.image_url_small || c.images?.[0] || "");
+      return { name: cname, img };
+    })
+    .filter(c => c.name);
+}
+
+// ── Unified fallback chain ──
+async function fetchCards(name) {
+  await cmLoadMasterDuelDB();
+  let data =
+    (await cmSearchYGOPRODeck(name)) ||
+    (await cmFetchYGOPrices(name)) ||
+    (await cmLoadYamlYugiCards()) ||
+    cmMasterDuelSearch(name);
+
+  if (!data || (Array.isArray(data) && !data.length)) {
+    console.warn("All sources failed — offline fallback triggered.");
+    return [];
+  }
+  return data;
+}
+
+// ── Proxy toggles ──
+function toggleProxyImages(on) {
+  CM_PROXY_ENABLED = !!on;
+  useProxy = !!on;
+  console.log("Proxy Images:", CM_PROXY_ENABLED);
+}
+
+function toggleProxyAPI(on) {
+  CM_PROXY_API_ENABLED = !!on;
+  console.log("Proxy API Calls:", CM_PROXY_API_ENABLED);
+}
+
+function toggleProxyEverything(on) {
+  CM_PROXY_ENABLED = !!on;
+  CM_PROXY_API_ENABLED = !!on;
+  useProxy = !!on;
+  console.log("Proxy Everything:", CM_PROXY_ENABLED, CM_PROXY_API_ENABLED);
+}
+
+// ── Deck Builder API source inheritance ──
+let CM_API_SOURCE = "ygoprodeck";
+
+function cmSetApiSource(src) {
+  CM_API_SOURCE = src;
+}
+
+async function cmDeckBuilderSearch(name) {
+  switch (CM_API_SOURCE) {
+    case "ygoprodeck":
+      return await cmSearchYGOPRODeck(name);
+    case "yaml-yugi":
+      const yamlCards = await cmLoadYamlYugiCards();
+      return yamlCards.filter(c =>
+        (c.name?.en || "").toLowerCase().includes(name.toLowerCase())
+      );
+    case "master-duel":
+      await cmLoadMasterDuelDB();
+      return cmMasterDuelSearch(name);
+    default:
+      return await cmSearchYGOPRODeck(name);
+  }
+}
 </script>
 </body>
 </html>
