@@ -1872,7 +1872,7 @@ async function cmLoadMasterDuelDB(){
   if(CM_MD_DB.length)return;
   try{
     // yaml-yugi publishes a filtered Master Duel card pool
-    const res=await fetch('https://dawnbrandbots.github.io/yaml-yugi/master-duel.json');
+    const res=await fetch('https://dawnbrandbots.github.io/yaml-yugi/master-duel-raw.json');
     if(!res.ok)throw new Error('Master Duel DB HTTP '+res.status);
     CM_MD_DB=await res.json();
   }catch(e){console.warn('Master Duel DB load failed:',e);}
