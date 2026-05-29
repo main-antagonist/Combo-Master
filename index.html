@@ -229,12 +229,14 @@ body.num-inline .fv-num{margin-top:0}
 .theme-swatches{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.6rem}
 .theme-sw{border:2px solid transparent;border-radius:6px;padding:0 14px;cursor:pointer;font-size:.78rem;font-weight:600;transition:all .2s;height:2rem;min-height:2rem;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
 .theme-sw.active{border-color:var(--accent2)!important;box-shadow:var(--glow)}
-.color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px}
-.color-field{display:flex;align-items:center;gap:6px;font-size:.78rem;flex-wrap:wrap}
-.color-field .alpha-slider{width:60px;height:6px;accent-color:var(--accent);flex-shrink:0}
-.color-field .alpha-lbl{font-size:.68rem;color:var(--muted);min-width:28px;text-align:right}
-.color-field input[type=color]{flex-shrink:0;order:0}
-.color-field label{flex:1;color:var(--muted);text-align:left;min-width:0;word-break:break-word;order:1;cursor:default}
+.color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:5px}
+.color-field{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:5px 6px;background:var(--surface3);border-radius:5px;font-size:.78rem}
+.color-field__top{display:flex;align-items:center;gap:5px;width:100%}
+.color-field input[type=color]{flex-shrink:0;cursor:pointer;width:28px;height:22px;padding:1px;border:1px solid var(--border);border-radius:3px;background:none}
+.color-field label{flex:1;color:var(--muted);min-width:0;word-break:break-word;cursor:default;font-size:.75rem;line-height:1.3}
+.color-field .alpha-wrap{display:flex;align-items:center;gap:3px;width:100%}
+.color-field .alpha-num{flex:1;min-width:0;font-size:.7rem;padding:2px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);text-align:center}
+.color-field .alpha-tag{font-size:.68rem;color:var(--muted);flex-shrink:0}
 /* CARD PICKER */
 .card-picker{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);box-shadow:0 8px 40px rgba(0,0,0,.7);padding:14px;z-index:9000;width:min(620px,94vw);height:min(680px,88vh);display:flex;flex-direction:column;gap:8px}
 .cp-search-row{display:flex;gap:6px}
@@ -1026,7 +1028,7 @@ let S={
     {label:'YGOPRODeck (exact)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?name={name}'},
     {label:'Master Duel (strict)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname={name}&format=master+duel'},
     {label:'Master Duel (offline)',url:'masterduel://'},
-    {label:'YGO Prices (fuzzy)',url:'https://yugiohprices.com/api/get_card_prices/{name}'},
+    {label:'YGO Prices (fuzzy) ⚠',url:'https://yugiohprices.com/api/get_card_prices/{name}'},
   ],
   themeIndex:0,customTheme:{},bodyFont:BASE_FONTS[0].css,headFont:BASE_FONTS[0].css,
   cardScale:100,deckScale:60,deckSearchScale:80,editorScale:100,editorSearchScale:100,editorCustomScale:110,cardSearchApiIdx:0,emojiScale:1.6,uiScale:150,
@@ -1057,7 +1059,7 @@ function buildImageUrl(directUrl){
 
 async function cmFetch(url,opts={},{isApi=false,isImage=false}={}){
   const proxyOn=CM_PROXY_ENABLED||useProxy;
-  const shouldProxy=proxyOn&&((isApi&&CM_PROXY_API_ENABLED)||(isImage&&!isApi)||(!isApi&&!isImage&&CM_PROXY_API_ENABLED));
+  const shouldProxy=proxyOn&&((isApi&&CM_PROXY_API_ENABLED)||(isImage&&proxyOn));
   const finalUrl=shouldProxy?cmBuildProxiedUrl(url):url;
   try{
     const res=await fetch(finalUrl,opts);
@@ -1831,7 +1833,7 @@ function cmSetCached(name,data){
 async function cmLoadMasterDuelDB(){
   if(CM_MD_DB.length)return;
   let res=await cmFetch('https://dawnbrandbots.github.io/yaml-yugi/master-duel-raw.json',{},{isApi:true});
-  if(!res)res=await cmFetch('https://raw.githubusercontent.com/dawnbrandbots/yaml-yugi/refs/heads/main/master-duel-raw.json',{},{isApi:true});
+  if(!res)res=await cmFetch('https://raw.githubusercontent.com/DawnbrandBots/yaml-yugi/aggregate/master-duel-raw.json',{},{isApi:true});
   if(!res){console.warn('Master Duel DB: all URLs failed');return;}
   try{CM_MD_DB=await res.json();}catch(e){console.warn('Master Duel DB JSON parse failed:',e);}
 }
@@ -1898,7 +1900,7 @@ async function cmSearch(q,apiIdx){
     if(url.includes('format=')){
       // Strict filtered search — use fname with the format param appended
       try{
-        const res=await cmFetch(`${CM_YGOPRO}?fname=${encodeURIComponent(q)}&num=20&offset=0&format=master+duel`);
+        const res=await cmFetch(`${CM_YGOPRO}?fname=${encodeURIComponent(q)}&num=20&offset=0&format=master+duel`,{},{isApi:true});
         if(!res)throw new Error('cmFetch returned null');
         const raw=await res.json();
         const list=Array.isArray(raw)?raw:(Array.isArray(raw.data)?raw.data:[]);
@@ -1910,7 +1912,7 @@ async function cmSearch(q,apiIdx){
 
   } else if(url.includes('yugiohprices')){
     try{return await cmYgoPricesSearch(q);}
-    catch(e){console.warn('YGOPrices failed:',e);return[];}
+    catch(e){console.warn('YGOPrices failed (blocked by origin or Cloudflare — 530):',e);return[];}
 
   } else if(url.includes('yaml')||url.includes('dawnbrand')){
     toast('YAML-Yugi bulk source unavailable (98MB). Use Master Duel (offline) instead.','warn',5000);
@@ -2317,12 +2319,23 @@ function renderColorGrid(){
     const cur=S.customTheme[k]||getComputedStyle(document.documentElement).getPropertyValue(k).trim()||tv[k]||'#888';
     const hex=toHex(cur);
     const alpha=toAlpha(cur);
-    const alphaSlider=CLR_ALPHA_VARS.has(k)?`<input type="range" class="alpha-slider" min="0" max="100" value="${Math.round(alpha*100)}" data-var="${k}" data-role="alpha" title="Opacity ${Math.round(alpha*100)}%"><span class="alpha-lbl">${Math.round(alpha*100)}%</span>`:'';
-    return`<div class="color-field"><input type="color" value="${hex}" data-var="${k}"><label>${label}</label>${alphaSlider}</div>`;
+    const alphaEl=CLR_ALPHA_VARS.has(k)
+      ?`<span class="alpha-wrap"><input type="number" class="alpha-num" min="0" max="100" value="${Math.round(alpha*100)}" data-var="${k}" data-role="alpha" title="Opacity %"><span class="alpha-tag">%</span></span>`
+      :'';
+    return`<div class="color-field"><div class="color-field__top"><input type="color" value="${hex}" data-var="${k}"><label title="${label}">${label}</label></div>${alphaEl}</div>`;
   }).join('');
-  // Wire alpha sliders to update label live
-  grid.querySelectorAll('input[data-role="alpha"]').forEach(sl=>{
-    sl.addEventListener('input',()=>sl.nextElementSibling.textContent=sl.value+'%');
+  // Live preview — apply immediately on any change
+  grid.querySelectorAll('input[type=color], input[data-role="alpha"]').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      const v=inp.dataset.var;
+      const colorInp=grid.querySelector(`input[type=color][data-var="${v}"]`);
+      const alphaInp=grid.querySelector(`input[data-role="alpha"][data-var="${v}"]`);
+      if(!colorInp)return;
+      const hex=colorInp.value;
+      const alpha=alphaInp?Math.min(100,Math.max(0,parseInt(alphaInp.value)||100))/100:1;
+      const val=alpha<1?hexToRgba(hex,alpha):hex;
+      document.documentElement.style.setProperty(v,val);
+    });
   });
 }
 function applyCustomTheme(){
@@ -2331,7 +2344,7 @@ function applyCustomTheme(){
     const v=inp.dataset.var;if(!v)return;
     const hex=inp.value;
     const alphaEl=grid.querySelector(`input[data-role="alpha"][data-var="${v}"]`);
-    const alpha=alphaEl?parseInt(alphaEl.value)/100:1;
+    const alpha=alphaEl?Math.min(100,Math.max(0,parseInt(alphaEl.value)||100))/100:1;
     const val=alpha<1?hexToRgba(hex,alpha):hex;
     S.customTheme[v]=val;
     document.documentElement.style.setProperty(v,val);
@@ -2810,20 +2823,25 @@ async function cmNetworkTest(){
   if(panel)panel.style.display='block';
   panel.innerHTML='';
   cmDebugLog('Running network test…');
-  const tests=[
+  // Direct API tests — use cmFetch so proxy routing is tested correctly
+  const apiTests=[
     ['YGOPRODeck','https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician',{isApi:true}],
     ['YGOPrices','https://yugiohprices.com/api/get_card_prices/Dark%20Magician',{isApi:true}],
-    ['MD Raw (GitHub)','https://raw.githubusercontent.com/dawnbrandbots/yaml-yugi/refs/heads/main/master-duel-raw.json',{isApi:true}],
-    ['Worker','https://cmw.cm-v1.workers.dev/?url='+encodeURIComponent('https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician'),{}],
+    ['MD Raw (GitHub)','https://raw.githubusercontent.com/DawnbrandBots/yaml-yugi/aggregate/master-duel-raw.json',{isApi:true}],
   ];
-  for(const [label,url,opts] of tests){
+  for(const [label,url,opts] of apiTests){
     try{
       const res=await cmFetch(url,{},opts);
       cmDebugLog(label+': '+(res?'✅ OK':'❌ null/fail'));
-    }catch(e){
-      cmDebugLog(label+': ❌ '+e.message);
-    }
+    }catch(e){cmDebugLog(label+': ❌ '+e.message);}
   }
+  // Worker test — ALWAYS use raw fetch to avoid double-proxying
+  const workerBase=CM_PROXY_CUSTOM||'https://cmw.cm-v1.workers.dev/?url=';
+  const workerTestUrl=workerBase+encodeURIComponent('https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician');
+  try{
+    const res=await fetch(workerTestUrl);
+    cmDebugLog('Worker: '+(res.ok?'✅ OK (HTTP '+res.status+')':'❌ HTTP '+res.status));
+  }catch(e){cmDebugLog('Worker: ❌ '+e.message);}
   cmDebugLog('Test complete.');
 }
 
@@ -2864,17 +2882,33 @@ let CM_BG_IMAGE_DATA=''; // base64 data URL
 function cmBgImageUpload(input){
   const file=input.files?.[0];
   if(!file)return;
+  toast('Processing image…','ok',2000);
   const reader=new FileReader();
   reader.onload=e=>{
-    CM_BG_IMAGE_DATA=e.target.result;
-    cmBgImageApply();
-    // Show preview
-    const prev=document.getElementById('bg-image-preview');
-    const img=document.getElementById('bg-preview-img');
-    if(prev&&img){img.src=CM_BG_IMAGE_DATA;prev.style.display='block';}
-    // Ask about transparency presets
-    cmBgTransparencyPrompt();
-    sv('bgImageData',CM_BG_IMAGE_DATA);
+    const raw=e.target.result;
+    // Compress via canvas to avoid localStorage lockup on large images
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=1920;
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){const r=MAX/Math.max(w,h);w=Math.round(w*r);h=Math.round(h*r);}
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const compressed=canvas.toDataURL('image/jpeg',0.85);
+      CM_BG_IMAGE_DATA=compressed;
+      cmBgImageApply();
+      const prev=document.getElementById('bg-image-preview');
+      const pimg=document.getElementById('bg-preview-img');
+      if(prev&&pimg){pimg.src=compressed;prev.style.display='block';}
+      try{sv('bgImageData',compressed);}catch(err){
+        // If still too large for localStorage, store without saving (session only)
+        console.warn('BG image too large for localStorage — session only',err);
+        toast('Image loaded (too large to persist across sessions)','warn',5000);
+      }
+      cmBgTransparencyPrompt();
+    };
+    img.src=raw;
   };
   reader.readAsDataURL(file);
   input.value='';
