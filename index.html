@@ -8,6 +8,7 @@
 <style>
 :root{
   --bg:#060e1a;--surface:#0d1f36;--surface2:#142b47;--surface3:#1c3a60;
+  --bg-image:none;--bg-image-size:cover;--bg-image-repeat:no-repeat;--panel-blur:0px;
   --border:#254d72;--text:#d4eaf5;--muted:#7aa0be;
   --accent:#d4a017;--accent2:#ffd055;--accentH:#e8b520;
   --link:#5bc8f5;--danger:#c0392b;--dangerH:#e74c3c;--ok:#27ae60;--warn:#e67e22;
@@ -21,7 +22,8 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;overflow-x:hidden}
-body{font-family:var(--body-font);background:var(--bg);color:var(--text);min-height:100vh;font-size:1rem;line-height:1.55}
+body{font-family:var(--body-font);background:var(--bg);color:var(--text);min-height:100vh;font-size:1rem;line-height:1.55;background-image:var(--bg-image,none);background-size:var(--bg-image-size,cover);background-repeat:var(--bg-image-repeat,no-repeat);background-position:center center;background-attachment:fixed}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;margin-bottom:.75rem;width:100%;backdrop-filter:blur(var(--panel-blur,0px));-webkit-backdrop-filter:blur(var(--panel-blur,0px))}
 h1,h2,h3,h4{font-family:var(--head-font);color:var(--accent2);line-height:1.2}
 h1{font-size:clamp(1rem,4vw,1.6rem);letter-spacing:.04em}
 h2{font-size:clamp(.95rem,3vw,1.35rem);margin-bottom:.6rem}
@@ -43,7 +45,7 @@ header{background:var(--surface);border-bottom:2px solid var(--accent);box-shado
 .tab-panel{display:none;background:var(--surface2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:.7rem;width:100%;animation:fadeIn .18s ease}
 .tab-panel.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;margin-bottom:.75rem;width:100%}
+
 .panel:last-child{margin-bottom:0}
 .ptitle{font-family:var(--head-font);font-size:.85rem;color:var(--accent);margin-bottom:.55rem;padding-bottom:.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px}
 .btn{background:var(--accent);border:none;border-radius:5px;color:#0a0a0a;cursor:pointer;font-family:var(--body-font);font-size:.78rem;font-weight:700;padding:0 12px;height:var(--btn-h);min-height:var(--btn-h);transition:all .17s;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:4px;flex-shrink:0;box-sizing:border-box}
@@ -228,7 +230,9 @@ body.num-inline .fv-num{margin-top:0}
 .theme-sw{border:2px solid transparent;border-radius:6px;padding:0 14px;cursor:pointer;font-size:.78rem;font-weight:600;transition:all .2s;height:2rem;min-height:2rem;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
 .theme-sw.active{border-color:var(--accent2)!important;box-shadow:var(--glow)}
 .color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px}
-.color-field{display:flex;align-items:center;gap:6px;font-size:.78rem}
+.color-field{display:flex;align-items:center;gap:6px;font-size:.78rem;flex-wrap:wrap}
+.color-field .alpha-slider{width:60px;height:6px;accent-color:var(--accent);flex-shrink:0}
+.color-field .alpha-lbl{font-size:.68rem;color:var(--muted);min-width:28px;text-align:right}
 .color-field input[type=color]{flex-shrink:0;order:0}
 .color-field label{flex:1;color:var(--muted);text-align:left;min-width:0;word-break:break-word;order:1;cursor:default}
 /* CARD PICKER */
@@ -277,7 +281,7 @@ body.layout-portrait .wrap{max-width:680px}
 .layout-btn{font-size:.72rem;padding:2px 7px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--muted);font-family:var(--body-font);transition:all .15s;white-space:nowrap}
 .layout-btn:hover{background:var(--border);color:var(--text)}
 .layout-btn.active{background:var(--surface3);color:var(--accent2);border-color:var(--accent)}
-@media print{header,.nav-tabs,.btn,.btn-row,#toast,.modal-overlay,.cycle-bar,.in-sev-row,.ss-controls,.ct-plus,.it-del,.sc-del,.in-del-btn,.ses-nav,.add-slot,.add-step-btn,.card-picker{display:none!important}.tab-panel{display:block!important;border:none!important}body{background:#fff;color:#000;font-size:12pt}.panel,.viewer-step,.int-note,.flow-view{border-color:#ccc!important;background:#fff!important;box-shadow:none!important}h2,h3,h4,.vs-card-name,strong{color:#000!important}}
+@media print{header,.nav-tabs,.btn,.btn-row,#toast,.modal-overlay,.cycle-bar,.in-sev-row,.ss-controls,.ct-plus,.it-del,.sc-del,.in-del-btn,.ses-nav,.add-slot,.add-step-btn,.card-picker{display:none!important}.tab-panel{display:block!important;border:none!important}body{background:#fff!important;background-image:none!important;color:#000;font-size:12pt}.panel,.viewer-step,.int-note,.flow-view{border-color:#ccc!important;background:#fff!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}h2,h3,h4,.vs-card-name,strong{color:#000!important}}
 /* ── Custom combobox (type-to-filter + scrollable) ── */
 .cm-combo-wrap{position:relative;flex:1;min-width:0}
 .cm-combo-input{width:100%;box-sizing:border-box;padding:6px 42px 6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--body-font);font-size:.82rem;cursor:text;line-height:1.4}
@@ -322,7 +326,13 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
         <option value="auto">⟳ Auto</option>
       </select>
     </label>
-    <button class="btn sm sec" id="btn-print" title="Print the currently selected combo (select one in Viewer tab first)">🖨 Print Combo</button>
+    <span style="position:relative">
+      <button class="btn sm sec" id="btn-print" title="Print the currently selected combo">🖨 Print Combo ▾</button>
+      <div id="print-menu" style="display:none;position:absolute;top:100%;left:0;z-index:999;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px;box-shadow:0 4px 14px rgba(0,0,0,.4);min-width:150px;margin-top:3px">
+        <button class="btn sm" style="width:100%;margin-bottom:3px" onclick="document.getElementById('print-menu').style.display='none';printCombo('modern')">🖨 Modern (A4)</button>
+        <button class="btn sm sec" style="width:100%" onclick="document.getElementById('print-menu').style.display='none';printCombo('legacy')">📄 Legacy (compact)</button>
+      </div>
+    </span>
     <button class="btn sm sec" id="btn-cache-cards" title="Download all card images from your combos and decklist as a ZIP file">⬇ Download Cards</button>
   </div>
 </header>
@@ -707,6 +717,36 @@ My Combo Name
       </div>
     </div>
     <div class="panel">
+      <h3>🖼 Background Image</h3>
+      <p style="font-size:.75rem;color:var(--muted);margin-bottom:.6rem">Upload an image to use as the page background. Panel colours will become semi-transparent so the image shows through.</p>
+      <div class="btn-row" style="flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem">
+        <label class="btn sm" style="cursor:pointer">📁 Upload Image<input type="file" id="bg-image-upload" accept="image/*" style="display:none" onchange="cmBgImageUpload(this)"></label>
+        <button class="btn sm sec" onclick="cmBgImageClear()">✕ Remove Image</button>
+      </div>
+      <div id="bg-image-preview" style="display:none;margin-bottom:.5rem">
+        <img id="bg-preview-img" style="max-height:80px;max-width:100%;border-radius:5px;border:1px solid var(--border);object-fit:cover" alt="BG preview">
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.4rem">
+        <label style="font-size:.78rem;color:var(--muted)">Fit:</label>
+        <select id="bg-size-select" class="txt" style="flex:1;min-width:100px" onchange="cmBgSizeChange(this.value)">
+          <option value="cover">Cover (fill, crop edges)</option>
+          <option value="contain">Contain (fit, letterbox)</option>
+          <option value="auto">Original size</option>
+          <option value="tile">Tile (repeat)</option>
+          <option value="custom">Custom size…</option>
+        </select>
+      </div>
+      <div id="bg-custom-size-row" style="display:none;gap:.4rem;align-items:center;flex-wrap:wrap;margin-bottom:.4rem">
+        <input type="text" id="bg-custom-size-input" class="txt" placeholder="e.g. 1920px 1080px or 100% 100%" style="flex:1;min-width:140px">
+        <button class="btn sm" onclick="cmBgApplyCustomSize()">Apply</button>
+      </div>
+      <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.4rem">
+        <label style="font-size:.78rem;color:var(--muted)">Panel blur:</label>
+        <input type="range" id="panel-blur-slider" min="0" max="20" value="0" style="flex:1;accent-color:var(--accent)" oninput="cmPanelBlurChange(this.value)">
+        <span id="panel-blur-lbl" style="font-size:.75rem;color:var(--muted);min-width:30px">0px</span>
+      </div>
+    </div>
+    <div class="panel">
       <h3>Fonts</h3>
       <p style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Both Body and Heading fonts share the same options. Click ✕ on any font option to hide it from the grid.</p>
       <label style="margin-bottom:.3rem;font-size:.77rem">Body Font</label>
@@ -729,16 +769,31 @@ My Combo Name
       </div>
     </div>
     <div class="panel">
-      <h3>🌐 Image Proxy</h3>
+      <h3>🌐 Proxy &amp; API Settings</h3>
       <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">
         <button class="btn" id="proxyToggleBtn" onclick="toggleProxy()">Proxy: OFF</button>
-        <button class="btn" id="proxyApiBtn" onclick="CM_PROXY_API_ENABLED=!CM_PROXY_API_ENABLED;this.textContent='API Proxy: '+(CM_PROXY_API_ENABLED?'ON':'OFF')">API Proxy: OFF</button>
+        <button class="btn" id="proxyApiBtn" onclick="toggleProxyAPI(!CM_PROXY_API_ENABLED);this.textContent='API Proxy: '+(CM_PROXY_API_ENABLED?'ON':'OFF')">API Proxy: OFF</button>
+        <button class="btn" onclick="toggleProxyEverything(!(CM_PROXY_ENABLED&&CM_PROXY_API_ENABLED));document.getElementById('proxyToggleBtn').textContent='Proxy: '+(CM_PROXY_ENABLED?'ON':'OFF');document.getElementById('proxyApiBtn').textContent='API Proxy: '+(CM_PROXY_API_ENABLED?'ON':'OFF')">Proxy All</button>
       </div>
-      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
-        <input id="customProxyInput" class="txt" placeholder="Custom proxy URL (optional)" style="flex:1;min-width:180px">
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">
+        <input id="customProxyInput" class="txt" placeholder="Custom proxy URL (blank = default Worker)" style="flex:1;min-width:180px">
         <button class="btn" onclick="applyCustomProxy()">Set Proxy</button>
       </div>
-      <p style="font-size:.75rem;color:var(--muted);margin-top:.4rem">Default: cmw.cm-v1.workers.dev — Leave blank to use default. Proxy OFF = direct YGOPRODeck.</p>
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">
+        <label style="font-size:.8rem;color:var(--muted)">API Source:</label>
+        <select id="apiSourceSelect" class="txt" style="flex:1;min-width:140px" onchange="cmSetApiSource(this.value)">
+          <option value="ygoprodeck">YGOPRODeck</option>
+          <option value="master-duel">Master Duel (offline)</option>
+          <option value="yaml-yugi">YAML-Yugi (unavailable)</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+        <button class="btn" onclick="cmNetworkTest()">🔌 Network Test</button>
+        <button class="btn" onclick="cmWorkerHealthCheck()">⚙ Worker Health</button>
+        <button class="btn" onclick="cmToggleDebugPanel()">🐛 Debug Panel</button>
+      </div>
+      <div id="cm-debug-panel" style="display:none;background:var(--bg2,#111);border:1px solid var(--border);border-radius:5px;padding:.6rem;font-size:.75rem;font-family:monospace;color:var(--muted);margin-top:.4rem;max-height:180px;overflow-y:auto"></div>
+      <p style="font-size:.75rem;color:var(--muted);margin-top:.4rem">Default Worker: cmw.cm-v1.workers.dev — Proxy OFF = direct requests.</p>
     </div>
     <div class="panel">
       <h3>⚠ Data Management</h3>
@@ -961,6 +1016,7 @@ const DEF_THEMES=[
   {name:'Gloomy',sw:'#303030',lt:false,v:{'--bg':'#000000','--surface':'#000000','--surface2':'#303030','--surface3':'#4b4b4b','--border':'#4b4b4b','--accent':'#c8c8c8','--accent2':'#c8c8c8','--accentH':'#960000','--link':'#0069cc','--text':'#c8c8c8','--muted':'#c8c8c8','--num-text':'#000000'}},
 ];
 const CLR_LABELS={'--bg':'Background','--surface':'Panel BG','--surface2':'Tab Content','--surface3':'Highlight','--border':'Borders','--accent':'Accent','--accent2':'Headings','--accentH':'Accent Hover','--link':'Links','--text':'Body Text','--muted':'Muted Text','--num-text':'Step № Text'};
+const CLR_ALPHA_VARS=new Set(['--bg','--surface','--surface2','--surface3']);
 
 // ── STATE ──
 let S={
@@ -983,32 +1039,46 @@ let toastT;
 function toast(m,t='ok',d=2800){const e=document.getElementById('toast');e.textContent=m;e.className=`show ${t}`;clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),d);}
 
 // ── Proxy configuration ──
-let CM_PROXY_ENABLED=false;        // controls image proxy
-let CM_PROXY_API_ENABLED=false;    // controls API proxy
-let CM_PROXY_CUSTOM='';            // optional custom worker URL
+let CM_PROXY_ENABLED=false;
+let CM_PROXY_API_ENABLED=false;
+let CM_PROXY_CUSTOM='';
+let useProxy=false;
+let customProxy='';
 
-// Legacy aliases (so old code doesn't break)
-Object.defineProperty(window,'useProxy',{get:()=>CM_PROXY_ENABLED,set:v=>CM_PROXY_ENABLED=v});
-Object.defineProperty(window,'customProxy',{get:()=>CM_PROXY_CUSTOM,set:v=>CM_PROXY_CUSTOM=v});
-
-// ── Centralized fetch wrapper ──
 function cmBuildProxiedUrl(url){
-  const base=CM_PROXY_CUSTOM||'https://cmw.cm-v1.workers.dev/?url=';
+  const base=CM_PROXY_CUSTOM||customProxy||'https://cmw.cm-v1.workers.dev/?url=';
   return base+encodeURIComponent(url);
 }
 
-// Legacy cmFetch removed; new cmFetch defined later.
+function buildImageUrl(directUrl){
+  if(!(CM_PROXY_ENABLED||useProxy))return directUrl;
+  return cmBuildProxiedUrl(directUrl);
+}
+
+async function cmFetch(url,opts={},{isApi=false,isImage=false}={}){
+  const proxyOn=CM_PROXY_ENABLED||useProxy;
+  const shouldProxy=proxyOn&&((isApi&&CM_PROXY_API_ENABLED)||(isImage&&!isApi)||(!isApi&&!isImage&&CM_PROXY_API_ENABLED));
+  const finalUrl=shouldProxy?cmBuildProxiedUrl(url):url;
+  try{
+    const res=await fetch(finalUrl,opts);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    return res;
+  }catch(e){console.warn('cmFetch failed:',finalUrl,e);return null;}
+}
 
 async function cmGetImage(url){
   if(!url||url.startsWith('data:'))return url;
   const key='cardImage_'+btoa(url).slice(0,40);
   try{const cached=localStorage.getItem(key);if(cached)return cached;}catch{}
-  const res=await cmFetch(url,{},{isImage:true});
-  if(!res)return null;
-  const blob=await res.blob();
-  const base64=await new Promise(resolve=>{const r=new FileReader();r.onloadend=()=>resolve(r.result);r.readAsDataURL(blob);});
-  try{localStorage.setItem(key,base64);}catch{}
-  return base64;
+  try{
+    const fetchUrl=buildImageUrl(url);
+    const res=await fetch(fetchUrl);
+    if(!res.ok)return url;
+    const blob=await res.blob();
+    const base64=await new Promise(resolve=>{const r=new FileReader();r.onloadend=()=>resolve(r.result);r.readAsDataURL(blob);});
+    try{localStorage.setItem(key,base64);}catch{}
+    return base64;
+  }catch{return url;}
 }
 
 function clearImageCache(){
@@ -1018,25 +1088,35 @@ function clearImageCache(){
 
 function toggleProxy(){
   CM_PROXY_ENABLED=!CM_PROXY_ENABLED;
+  useProxy=CM_PROXY_ENABLED;
+  sv('proxyEnabled',CM_PROXY_ENABLED);
   const btn=document.getElementById('proxyToggleBtn');
   if(btn)btn.textContent='Proxy: '+(CM_PROXY_ENABLED?'ON':'OFF');
 }
-function toggleProxyAPI(on){CM_PROXY_API_ENABLED=!!on;console.log('Proxy API Calls:',CM_PROXY_API_ENABLED);}
-// Legacy toggleProxyImages removed; new implementation defined later.
-function toggleProxyEverything(on){CM_PROXY_ENABLED=!!on;CM_PROXY_API_ENABLED=!!on;console.log('Proxy Everything:',CM_PROXY_ENABLED,CM_PROXY_API_ENABLED);}
+function toggleProxyImages(on){CM_PROXY_ENABLED=!!on;useProxy=!!on;console.log('Proxy Images:',CM_PROXY_ENABLED);}
+function toggleProxyAPI(on){CM_PROXY_API_ENABLED=!!on;sv('proxyApiEnabled',CM_PROXY_API_ENABLED);console.log('Proxy API:',CM_PROXY_API_ENABLED);}
+function toggleProxyEverything(on){CM_PROXY_ENABLED=!!on;CM_PROXY_API_ENABLED=!!on;useProxy=!!on;console.log('Proxy Everything:',CM_PROXY_ENABLED);}
 
 function applyCustomProxy(){
   const v=document.getElementById('customProxyInput');
-  if(v)CM_PROXY_CUSTOM=v.value.trim();
-  toast(CM_PROXY_CUSTOM?'Custom proxy set':'Proxy reset to default','ok');
+  const val=v?v.value.trim():'';
+  CM_PROXY_CUSTOM=val;
+  customProxy=val;
+  sv('proxyCustom',val);
+  toast(val?'Custom proxy set':'Proxy reset to default','ok');
 }
 
 function sv(k,v){try{localStorage.setItem(SK+k,JSON.stringify(v));}catch(e){console.warn(e);}}
 function ld(k,fb=null){try{const v=localStorage.getItem(SK+k);return v!==null?JSON.parse(v):fb;}catch{return fb;}}
-function saveAll(){sv('combos',S.combos);sv('decklist',S.decklist);sv('savedDecks',S.savedDecks);sv('resources',S.resources);sv('imgSources',S.imgSources);sv('theme',S.themeIndex);sv('customTheme',S.customTheme);sv('bodyFont',S.bodyFont);sv('headFont',S.headFont);sv('cardScale',S.cardScale);sv('deckScale',S.deckScale);sv('deckSearchScale',S.deckSearchScale);sv('editorScale',S.editorScale);sv('editorSearchScale',S.editorSearchScale);sv('editorCustomScale',S.editorCustomScale);sv('cardSearchApiIdx',S.cardSearchApiIdx);sv('emojiScale',S.emojiScale);sv('uiScale',S.uiScale);sv('cardImgScale',S.cardImgScale);sv('iconImgScale',S.iconImgScale);sv('hiddenFonts',S.hiddenFonts);sv('deckSections',S.deckSections);sv('stepNumInline',S.stepNumInline);sv('layoutMode',S.layoutMode);}
+function saveAll(){sv('combos',S.combos);sv('decklist',S.decklist);sv('savedDecks',S.savedDecks);sv('resources',S.resources);sv('imgSources',S.imgSources);sv('theme',S.themeIndex);sv('customTheme',S.customTheme);sv('bodyFont',S.bodyFont);sv('headFont',S.headFont);sv('cardScale',S.cardScale);sv('deckScale',S.deckScale);sv('deckSearchScale',S.deckSearchScale);sv('editorScale',S.editorScale);sv('editorSearchScale',S.editorSearchScale);sv('editorCustomScale',S.editorCustomScale);sv('cardSearchApiIdx',S.cardSearchApiIdx);sv('emojiScale',S.emojiScale);sv('uiScale',S.uiScale);sv('cardImgScale',S.cardImgScale);sv('iconImgScale',S.iconImgScale);sv('hiddenFonts',S.hiddenFonts);sv('deckSections',S.deckSections);sv('stepNumInline',S.stepNumInline);sv('layoutMode',S.layoutMode);sv('proxyEnabled',CM_PROXY_ENABLED);sv('proxyApiEnabled',CM_PROXY_API_ENABLED);sv('proxyCustom',CM_PROXY_CUSTOM);sv('apiSource',CM_API_SOURCE);}
 function loadAll(){S.combos=ld('combos',{});S.decklist=ld('decklist',[]);S.savedDecks=ld('savedDecks',{});S.resources=ld('resources',[...DEF_RES]);S.imgSources=ld('imgSources',S.imgSources);S.themeIndex=ld('theme',0);S.customTheme=ld('customTheme',{});S.bodyFont=ld('bodyFont',S.bodyFont);S.headFont=ld('headFont',S.headFont);S.cardScale=ld('cardScale',100);S.deckScale=ld('deckScale',60);S.deckSearchScale=ld('deckSearchScale',80);S.editorScale=ld('editorScale',100);S.editorSearchScale=ld('editorSearchScale',100);S.editorCustomScale=ld('editorCustomScale',110);S.cardSearchApiIdx=ld('cardSearchApiIdx',0);S.emojiScale=ld('emojiScale',1.6);S.uiScale=ld('uiScale',150);S.cardImgScale=ld('cardImgScale',75);S.iconImgScale=ld('iconImgScale',56);S.hiddenFonts=ld('hiddenFonts',[]);hiddenFonts=new Set(S.hiddenFonts);S.cardImages=ld('cardImages',{});S.icons=ld('icons',{});S.deckSections=ld('deckSections',null);S.stepNumInline=ld('stepNumInline',false);S.layoutMode=ld('layoutMode','auto');
 // Migrate: if deckSections not set, create from decklist
 if(!S.deckSections){S.deckSections=[{id:'main',name:'Main Deck',cards:[...S.decklist]}];}
+// Restore proxy + API source prefs
+CM_PROXY_ENABLED=ld('proxyEnabled',false);useProxy=CM_PROXY_ENABLED;
+CM_PROXY_API_ENABLED=ld('proxyApiEnabled',false);
+CM_PROXY_CUSTOM=ld('proxyCustom','');customProxy=CM_PROXY_CUSTOM;
+CM_API_SOURCE=ld('apiSource','ygoprodeck');
 }
 function migrate(){for(const[,steps] of Object.entries(S.combos)){steps.forEach(step=>{if(step.handtraps&&!step.interruptions){step.interruptions=step.handtraps.map(h=>typeof h==='object'?h:{text:h,severity:getSev(h)});delete step.handtraps;}if(!step.interruptions)step.interruptions=[];if(!step.cards)step.cards=step.card?[{type:'card',name:step.card,imageUrl:step.imageUrl||''}]:[];});}}
 function getSev(t){if(!t)return'medium';const s=t.toLowerCase();if(s.includes('(critical)'))return'critical';if(s.includes('(high)'))return'high';if(s.includes('(low)'))return'low';if(s.includes('ash')||s.includes('impermanence')||s.includes('veiler'))return'high';if(s.includes('nibiru'))return'critical';return'medium';}
@@ -1152,7 +1232,9 @@ function applyLayout(mode){
 }
 function applyFonts(){document.documentElement.style.setProperty('--body-font',S.bodyFont);document.documentElement.style.setProperty('--head-font',S.headFont);}
 function applyUIScale(val){document.documentElement.style.fontSize=(val/100*15)+'px';S.uiScale=val;sv('uiScale',val);}
-function toHex(c){if(!c)return'#888';c=c.trim();if(c.startsWith('#'))return c.substring(0,7);const m=c.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);if(m)return'#'+[1,2,3].map(i=>parseInt(m[i]).toString(16).padStart(2,'0')).join('');return'#888';}
+function toHex(c){if(!c)return'#888';c=c.trim();if(c.startsWith('#'))return c.substring(0,7);const m=c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);if(m)return'#'+[1,2,3].map(i=>parseInt(m[i]).toString(16).padStart(2,'0')).join('');return'#888';}
+function toAlpha(c){if(!c)return 1;c=c.trim();const m=c.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*([\d.]+)\)/);return m?parseFloat(m[1]):1;}
+function hexToRgba(hex,alpha){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`rgba(${r},${g},${b},${alpha})`;}
 
 function openTab(name){
   document.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
@@ -1581,7 +1663,7 @@ function renderCPList(q){
   }else{
     clearTimeout(cpTO);if(!q){list.innerHTML='<div class="cp-empty">Type to search YGO cards online.</div>';return;}
     list.innerHTML='<div class="cp-empty">Searching...</div>';
-    cpTO=setTimeout(async()=>{try{const res=await cmFetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(q)}&num=20&offset=0`,{},{isApi:true});if(!res)throw new Error('fetch null');const data=await res.json();if(!data.data?.length){list.innerHTML='<div class="cp-empty">No results.</div>';return;}renderCPItems(data.data.map(c=>({type:'card',name:c.name,imageUrl:c.card_images?.[0]?.image_url_small||''})));}catch{list.innerHTML='<div class="cp-empty">Search failed.</div>';}},350);
+    cpTO=setTimeout(async()=>{try{const res=await cmFetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(q)}&num=20&offset=0`);if(!res)throw new Error('fetch null');const data=await res.json();if(!data.data?.length){list.innerHTML='<div class="cp-empty">No results.</div>';return;}renderCPItems(data.data.map(c=>({type:'card',name:c.name,imageUrl:c.card_images?.[0]?.image_url_small||''})));}catch{list.innerHTML='<div class="cp-empty">Search failed.</div>';}},350);
   }
 }
 function renderCPItems(items){
@@ -1719,44 +1801,12 @@ function setCardApi(idx){
 }
 // ════════════════════════════════════════════════════════════════════
 // UNIFIED CARD FETCHING ENGINE
-// Single cmFetchCard(name) entry point with automatic fallback chain
-// 1) YGOPRODeck fuzzy + YAML-Yugi merge
-// 2) YGOPRODeck exact
-// 3) Master Duel (optional)
-// ════════════════════════════════════════════════════════════════════
 
-// ════════════════════════════════════════════════════════════════════════════
-// Legacy cmFetchCard fallback chain removed; new fetch logic is defined later.
-// Unified merge function — combines data from multiple sources
-function cmMergeCardData(ygocard,yaml,primarySource,secondarySource){
-  return{
-    name:ygocard.name,
-    desc:(yaml&&yaml.desc)||ygocard.desc,
-    type:ygocard.type,
-    race:ygocard.race,
-    attribute:ygocard.attribute,
-    level:ygocard.level,
-    atk:ygocard.atk,
-    def:ygocard.def,
-    image_url:ygocard.card_images?.[0]?.image_url||null,
-    image_url_small:ygocard.card_images?.[0]?.image_url_small||null,
-    passcode:ygocard.id?.toString()||null,
-    sources:{
-      primary:primarySource,
-      secondary:secondarySource
-    },
-    raw:{
-      ygoprodeck:ygocard,
-      yaml_yugi:yaml||null
-    }
-  };
-}
 
 // ════════════════════════════════════════════════════════════════════
 // CARD ENGINE — cache + unified multi-API search + Master Duel
 // ════════════════════════════════════════════════════════════════════
 let CM_CARD_CACHE={};
-let CM_YAML_DB=[];
 let CM_MD_DB=[];      // Master Duel dataset (session-only)
 const CM_CARD_CACHE_KEY='cm_card_cache_v1';
 const CM_CACHE_MAX=600; // max entries before evicting oldest
@@ -1775,29 +1825,30 @@ function cmSetCached(name,data){
   cmSaveCardCache();
 }
 
-// ── YAML-Yugi loader (on-demand) ──
-async function cmLoadYamlYugi(){
-  if(CM_YAML_DB.length)return;
-  // cards.json is ~98MB — not feasible for browser. Use Master Duel (offline) source instead.
-  console.warn('YAML-Yugi bulk load unavailable (~98MB). Use Master Duel (offline) source.');
-  toast('YAML-Yugi source unavailable (98MB). Use Master Duel (offline) instead.','warn',5000);
-}
-function cmYamlSearch(name){
-  if(!CM_YAML_DB.length)return[];
-  const q=name.toLowerCase();
-  return CM_YAML_DB.filter(c=>(c.name?.en||'').toLowerCase().includes(q)).slice(0,20)
-    .map(c=>{const pass=c.password||c.id||'';return{name:c.name.en,img:pass?`https://images.ygoprodeck.com/images/cards_small/${pass}.jpg`:''};});
-}
-function cmYamlGetExact(name){
-  const q=name.toLowerCase();
-  const c=CM_YAML_DB.find(x=>(x.name?.en||'').toLowerCase()===q);
-  if(!c)return null;
-  const pass=c.password||c.id||'';
-  return{name:c.name.en,img:pass?`https://images.ygoprodeck.com/images/cards_small/${pass}.jpg`:''};
-}
+
 
 // ── Master Duel loader (on-demand) ──
-// Legacy Master Duel loader block removed; new implementation defined later.
+async function cmLoadMasterDuelDB(){
+  if(CM_MD_DB.length)return;
+  let res=await cmFetch('https://dawnbrandbots.github.io/yaml-yugi/master-duel-raw.json',{},{isApi:true});
+  if(!res)res=await cmFetch('https://raw.githubusercontent.com/dawnbrandbots/yaml-yugi/refs/heads/main/master-duel-raw.json',{},{isApi:true});
+  if(!res){console.warn('Master Duel DB: all URLs failed');return;}
+  try{CM_MD_DB=await res.json();}catch(e){console.warn('Master Duel DB JSON parse failed:',e);}
+}
+function cmMasterDuelSearch(name){
+  if(!CM_MD_DB.length)return[];
+  const q=name.toLowerCase();
+  return CM_MD_DB
+    .filter(c=>(c.name?.en||c.en?.name||c.en_name||'').toLowerCase().includes(q))
+    .slice(0,20)
+    .map(c=>{
+      const cname=c.name?.en||c.en?.name||c.en_name||'';
+      const pass=c.password||c.id||'';
+      const img=pass?`https://images.ygoprodeck.com/images/cards_small/${pass}.jpg`
+                    :(c.card_images?.[0]?.image_url_small||c.images?.[0]||'');
+      return{name:cname,img};
+    }).filter(c=>c.name);
+}
 
 // ── YGOPRODeck helpers ──
 const CM_YGOPRO='https://db.ygoprodeck.com/api/v7/cardinfo.php';
@@ -1805,14 +1856,12 @@ async function cmYgoproFuzzy(name){
   const res=await cmFetch(`${CM_YGOPRO}?fname=${encodeURIComponent(name)}&num=20&offset=0`,{},{isApi:true});
   if(!res)throw new Error('YGOPRODeck unreachable');
   const raw=await res.json();
-  // exact-fail fallback: retry fuzzy if needed
   const list=Array.isArray(raw)?raw:(Array.isArray(raw.data)?raw.data:[]);
   return list.map(c=>({name:c.name||'',img:c.card_images?.[0]?.image_url_small||c.card_images?.[0]?.image_url||''}));
 }
 async function cmYgoproExact(name){
   let res=await cmFetch(`${CM_YGOPRO}?name=${encodeURIComponent(name)}`,{},{isApi:true});
-  // 400/null = name not found exactly, retry as fuzzy
-  if(!res){res=await cmFetch(`${CM_YGOPRO}?fname=${encodeURIComponent(name)}&num=1`,{},{isApi:true});} 
+  if(!res)res=await cmFetch(`${CM_YGOPRO}?fname=${encodeURIComponent(name)}&num=1`,{},{isApi:true});
   if(!res)return null;
   const raw=await res.json();
   const c=Array.isArray(raw)?raw[0]:(raw.data?.[0]);
@@ -1849,7 +1898,7 @@ async function cmSearch(q,apiIdx){
     if(url.includes('format=')){
       // Strict filtered search — use fname with the format param appended
       try{
-        const res=await cmFetch(`${CM_YGOPRO}?fname=${encodeURIComponent(q)}&num=20&offset=0&format=master+duel`,{},{isApi:true});
+        const res=await cmFetch(`${CM_YGOPRO}?fname=${encodeURIComponent(q)}&num=20&offset=0&format=master+duel`);
         if(!res)throw new Error('cmFetch returned null');
         const raw=await res.json();
         const list=Array.isArray(raw)?raw:(Array.isArray(raw.data)?raw.data:[]);
@@ -1864,12 +1913,19 @@ async function cmSearch(q,apiIdx){
     catch(e){console.warn('YGOPrices failed:',e);return[];}
 
   } else if(url.includes('yaml')||url.includes('dawnbrand')){
-    await cmLoadYamlYugi();
-    return cmYamlSearch(q);
+    toast('YAML-Yugi bulk source unavailable (98MB). Use Master Duel (offline) instead.','warn',5000);
+    return [];
   }
 
-  // Unknown/custom URL — try as YGOPRODeck-compatible
-  try{return await cmYgoproFuzzy(q);}catch{return[];}
+  // Unknown/custom URL — substitute {name} and call directly
+  try{
+    const reqUrl=url.includes('{name}')?url.replace(/\{name\}/g,encodeURIComponent(q)):url+encodeURIComponent(q);
+    const res=await cmFetch(reqUrl,{},{isApi:true});
+    if(!res)return[];
+    const raw=await res.json();
+    const list=Array.isArray(raw)?raw:(Array.isArray(raw.data)?raw.data:[]);
+    return list.slice(0,20).map(c=>({name:c.name||c.en_name||'',img:c.card_images?.[0]?.image_url_small||c.image_url||''})).filter(c=>c.name);
+  }catch(e){console.warn('Custom API failed:',e);return[];}
 }
 
 // ── Get single card by name with cache ──
@@ -1878,8 +1934,7 @@ async function cmGetCardByName(name){
   const hit=cmGetCached(name);if(hit)return hit;
   let card=null;
   try{card=await cmYgoproExact(name);}catch{}
-  if(!card){try{const r=await cmYgoproFuzzy(name);card=r[0]||null;}catch{}}
-  if(!card)card=cmYamlGetExact(name);
+  if(!card){try{const r=await cmYgoproFuzzy(name);card=r?.[0]||null;}catch{}}
   if(card)cmSetCached(name,card);
   return card;
 }
@@ -2004,7 +2059,7 @@ async function cmEnsureCardImageCached(name){
   const card=await cmGetCardByName(name);
   if(!card?.img)return'';
   try{
-    const res=await cmFetch(card.img,{},{isImage:true});if(!res.ok)return card.img;
+    const res=await fetch(card.img);if(!res.ok)return card.img;
     const blob=await res.blob();
     const dataUrl=await new Promise(r=>{const fr=new FileReader();fr.onload=e=>r(e.target.result);fr.readAsDataURL(blob);});
     S.cardImages[name]=dataUrl;sv('cardImages',S.cardImages);
@@ -2012,7 +2067,33 @@ async function cmEnsureCardImageCached(name){
   }catch{return card.img;}
 }
 // ════════════════════════════════════════════════════════════════════
-// Legacy Deck Builder search helper removed; new fetchCards implementation is defined later.
+async function fetchCards(q,grid,spin,forDeck){
+  spin.classList.add('show');grid.innerHTML='';
+  try{
+    const apiIdx=forDeck?0:(S.cardSearchApiIdx||0);
+    const results=await cmSearch(q,apiIdx);
+    const normed=results.slice(0,24).filter(c=>c.name);
+    if(!normed.length){
+      const srcLabel=S.imgSources[forDeck?0:(S.cardSearchApiIdx||0)]?.label||'API';
+      grid.innerHTML=`<div class="empty-msg" style="grid-column:1/-1">No results in ${esc(srcLabel)}.</div>`;
+    }
+    else{
+      const oc=forDeck?`addFromDeckSearch(this)`:`addCardFromSearch(this)`;
+      grid.innerHTML=normed.map(c=>{
+        const enc=JSON.stringify({name:c.name,imageUrl:c.img}).replace(/"/g,'&quot;');
+        return`<div class="card-thumb" draggable="true" data-card="${enc}" onclick="${oc}" title="${esc(c.name)}">${c.img?`<img src="${c.img}" onerror="this.style.display='none'" alt="${esc(c.name)}">`:''}<div class="ct-name">${esc(c.name)}</div><div class="ct-plus">+</div></div>`;
+      }).join('');
+      if(forDeck)grid.querySelectorAll('.card-thumb img').forEach(img=>{img.style.maxHeight=S.deckSearchScale+'px';});
+      else applyEditorSearchScale();
+      if(!forDeck)grid.querySelectorAll('.card-thumb').forEach(el=>el.addEventListener('dragstart',e=>{
+        _dragType='card';e.dataTransfer.setData('cardData',el.dataset.card.replace(/&quot;/g,'"'));e.dataTransfer.effectAllowed='copy';
+      }));
+    }
+  }catch(err){
+    console.warn('Card search error:',err);
+    grid.innerHTML=`<div class="empty-msg" style="grid-column:1/-1">Search failed — ${err.message||'API unavailable'}.</div>`;
+  }finally{spin.classList.remove('show');}
+}
 function addCardFromSearch(el){try{addCardToSeq(JSON.parse(el.dataset.card.replace(/&quot;/g,'"')),true);}catch(e){console.error(e);}}
 function addFromDeckSearch(el){try{const d=JSON.parse(el.dataset.card.replace(/&quot;/g,'"'));addCardNameToDeck(d.name,1,d.imageUrl);}catch(e){console.error(e);}}
 function renderCustomCardGrid(){
@@ -2229,8 +2310,34 @@ function searchResources(){const q=document.getElementById('res-search-input').v
 
 // ══ SETTINGS ══
 function renderThemeSwatches(){document.getElementById('theme-swatches').innerHTML=DEF_THEMES.map((t,i)=>`<button class="theme-sw ${S.themeIndex===i?'active':''}" style="background:${t.sw};color:${t.lt?'#000':'#fff'};border-color:${i===S.themeIndex?'var(--accent2)':'transparent'}" onclick="applyTheme(${i})">${t.name}</button>`).join('');}
-function renderColorGrid(){const grid=document.getElementById('color-grid');const tv=DEF_THEMES[S.themeIndex]?.v||{};grid.innerHTML=Object.entries(CLR_LABELS).map(([k,label])=>{const cur=S.customTheme[k]||getComputedStyle(document.documentElement).getPropertyValue(k).trim()||tv[k]||'#888';return`<div class="color-field"><input type="color" value="${toHex(cur)}" data-var="${k}"><label>${label}</label></div>`;}).join('');}
-function applyCustomTheme(){document.querySelectorAll('#color-grid input[type=color]').forEach(inp=>{const v=inp.dataset.var;if(v){S.customTheme[v]=inp.value;document.documentElement.style.setProperty(v,inp.value);}});sv('customTheme',S.customTheme);toast('Colours applied',`ok`);}
+function renderColorGrid(){
+  const grid=document.getElementById('color-grid');
+  const tv=DEF_THEMES[S.themeIndex]?.v||{};
+  grid.innerHTML=Object.entries(CLR_LABELS).map(([k,label])=>{
+    const cur=S.customTheme[k]||getComputedStyle(document.documentElement).getPropertyValue(k).trim()||tv[k]||'#888';
+    const hex=toHex(cur);
+    const alpha=toAlpha(cur);
+    const alphaSlider=CLR_ALPHA_VARS.has(k)?`<input type="range" class="alpha-slider" min="0" max="100" value="${Math.round(alpha*100)}" data-var="${k}" data-role="alpha" title="Opacity ${Math.round(alpha*100)}%"><span class="alpha-lbl">${Math.round(alpha*100)}%</span>`:'';
+    return`<div class="color-field"><input type="color" value="${hex}" data-var="${k}"><label>${label}</label>${alphaSlider}</div>`;
+  }).join('');
+  // Wire alpha sliders to update label live
+  grid.querySelectorAll('input[data-role="alpha"]').forEach(sl=>{
+    sl.addEventListener('input',()=>sl.nextElementSibling.textContent=sl.value+'%');
+  });
+}
+function applyCustomTheme(){
+  const grid=document.getElementById('color-grid');
+  grid.querySelectorAll('input[type=color]').forEach(inp=>{
+    const v=inp.dataset.var;if(!v)return;
+    const hex=inp.value;
+    const alphaEl=grid.querySelector(`input[data-role="alpha"][data-var="${v}"]`);
+    const alpha=alphaEl?parseInt(alphaEl.value)/100:1;
+    const val=alpha<1?hexToRgba(hex,alpha):hex;
+    S.customTheme[v]=val;
+    document.documentElement.style.setProperty(v,val);
+  });
+  sv('customTheme',S.customTheme);toast('Colours applied','ok');
+}
 function resetCustomTheme(){S.customTheme={};sv('customTheme',{});applyTheme(S.themeIndex);renderColorGrid();toast('Colours reset',`ok`);}
 function exportTheme(){dlBlob(new Blob([JSON.stringify({themeBase:DEF_THEMES[S.themeIndex]?.name,custom:S.customTheme,bodyFont:S.bodyFont,headFont:S.headFont,uiScale:S.uiScale,cardScale:S.cardScale,deckScale:S.deckScale,deckSearchScale:S.deckSearchScale,editorScale:S.editorScale,editorSearchScale:S.editorSearchScale,emojiScale:S.emojiScale,cardImgScale:S.cardImgScale,iconImgScale:S.iconImgScale},null,2)],{type:'application/json'}),'combo-master-theme.json');toast('Theme & sliders exported',`ok`);}
 function openThemeImport(){const a=document.getElementById('theme-import-area');a.style.display=a.style.display==='none'?'block':'none';}
@@ -2253,16 +2360,22 @@ function handleFontUpload(file){if(!file)return;const r=new FileReader();r.onloa
 function renderImgSources(){document.getElementById('img-sources-list').innerHTML=S.imgSources.map((s,i)=>`<div style="display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-size:.78rem;font-weight:600">${esc(s.label)}</div><code style="font-size:.7rem;word-break:break-all;display:block;margin-top:2px;overflow-wrap:anywhere">${esc(s.url)}</code></div><button class="btn xs danger" onclick="removeImgSource(${i})">✕</button></div>`).join('');}
 function addImgSource(){const label=document.getElementById('src-label').value.trim();const url=document.getElementById('src-url').value.trim();if(!label||!url)return toast('Enter label and URL','warn');S.imgSources.push({label,url});sv('imgSources',S.imgSources);renderImgSources();document.getElementById('src-label').value='';document.getElementById('src-url').value='';}
 function removeImgSource(idx){S.imgSources.splice(idx,1);sv('imgSources',S.imgSources);renderImgSources();}
-function resetAllData(){if(!confirm('Delete ALL Combo Master data?\n\nBrowser history and other sites: NOT affected.'))return;Object.keys(localStorage).filter(k=>k.startsWith(SK)).forEach(k=>localStorage.removeItem(k));localStorage.removeItem(CM_CARD_CACHE_KEY);CM_CARD_CACHE={};FONTS=[...BASE_FONTS];hiddenFonts=new Set();S={combos:{},decklist:[],savedDecks:{},resources:[...DEF_RES],cardImages:{},icons:{},imgSources:[{label:'YGOPRODeck (fuzzy)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname={name}'},{label:'YGOPRODeck (exact)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?name={name}'},{label:'Master Duel (strict)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname={name}&format=master+duel'},{label:'Master Duel (offline)',url:'masterduel://'},{label:'YGO Prices (fuzzy)',url:'https://yugiohprices.com/api/get_card_prices/{name}'}],themeIndex:0,customTheme:{},bodyFont:BASE_FONTS[0].css,headFont:BASE_FONTS[0].css,cardScale:100,deckScale:60,deckSearchScale:80,editorScale:100,editorSearchScale:100,editorCustomScale:110,cardSearchApiIdx:0,emojiScale:1.6,uiScale:150,cardImgScale:75,iconImgScale:56,hiddenFonts:[],currentCombo:'',currentStep:0,viewMode:'step',deckViewMode:'list',editorMode:'flow',sesStep:0,deckSections:[{id:'main',name:'Main Deck',cards:[]}]};activeSectionIdx=0;seqSteps=[];stopCycle();applyTheme(0);applyFonts();applyUIScale(150);['ui-scale-slider','ui-scale-lbl'].forEach((id,j)=>{const el=document.getElementById(id);if(el)el[j?'textContent':'value']=j?'150%':'150';});renderViewerSelect();renderEditorSelect();renderSeqSteps();renderSES();renderDeckUI();renderImagesGrid();renderIconsGrid();renderEmojiCatBar();renderResources();renderImgSources();renderApiPopup();renderThemeSwatches();renderColorGrid();renderFontGrids();loadComboForView('');document.getElementById('viewer-select').value='';cmComboSetValue('viewer-combo-input','');cmComboSetValue('editor-combo-input','');toast('All data reset','ok');}
+function resetAllData(){if(!confirm('Delete ALL Combo Master data?\n\nBrowser history and other sites: NOT affected.'))return;Object.keys(localStorage).filter(k=>k.startsWith(SK)||k.startsWith('cardImage_')).forEach(k=>localStorage.removeItem(k));['bgImageData','bgSize','bgCustomSize','panelBlur','proxyEnabled','proxyApiEnabled','proxyCustom','apiSource'].forEach(k=>localStorage.removeItem(k));localStorage.removeItem(CM_CARD_CACHE_KEY);CM_CARD_CACHE={};CM_MD_DB=[];CM_PROXY_ENABLED=false;CM_PROXY_API_ENABLED=false;CM_PROXY_CUSTOM='';useProxy=false;customProxy='';CM_API_SOURCE='ygoprodeck';CM_BG_IMAGE_DATA='';document.documentElement.style.removeProperty('--bg-image');document.documentElement.style.removeProperty('--panel-blur');FONTS=[...BASE_FONTS];hiddenFonts=new Set();S={combos:{},decklist:[],savedDecks:{},resources:[...DEF_RES],cardImages:{},icons:{},imgSources:[{label:'YGOPRODeck (fuzzy)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname={name}'},{label:'YGOPRODeck (exact)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?name={name}'},{label:'Master Duel (strict)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname={name}&format=master+duel'},{label:'Master Duel (offline)',url:'masterduel://'},{label:'YGO Prices (fuzzy)',url:'https://yugiohprices.com/api/get_card_prices/{name}'}],themeIndex:0,customTheme:{},bodyFont:BASE_FONTS[0].css,headFont:BASE_FONTS[0].css,cardScale:100,deckScale:60,deckSearchScale:80,editorScale:100,editorSearchScale:100,editorCustomScale:110,cardSearchApiIdx:0,emojiScale:1.6,uiScale:150,cardImgScale:75,iconImgScale:56,hiddenFonts:[],currentCombo:'',currentStep:0,viewMode:'step',deckViewMode:'list',editorMode:'flow',sesStep:0,deckSections:[{id:'main',name:'Main Deck',cards:[]}]};activeSectionIdx=0;seqSteps=[];stopCycle();applyTheme(0);applyFonts();applyUIScale(150);['ui-scale-slider','ui-scale-lbl'].forEach((id,j)=>{const el=document.getElementById(id);if(el)el[j?'textContent':'value']=j?'150%':'150';});renderViewerSelect();renderEditorSelect();renderSeqSteps();renderSES();renderDeckUI();renderImagesGrid();renderIconsGrid();renderEmojiCatBar();renderResources();renderImgSources();renderApiPopup();renderThemeSwatches();renderColorGrid();renderFontGrids();loadComboForView('');document.getElementById('viewer-select').value='';cmComboSetValue('viewer-combo-input','');cmComboSetValue('editor-combo-input','');const pb=document.getElementById('proxyToggleBtn');if(pb)pb.textContent='Proxy: OFF';const ab=document.getElementById('proxyApiBtn');if(ab)ab.textContent='API Proxy: OFF';const ci=document.getElementById('customProxyInput');if(ci)ci.value='';const as=document.getElementById('apiSourceSelect');if(as)as.value='ygoprodeck';
+const bgp=document.getElementById('bg-image-preview');if(bgp)bgp.style.display='none';
+const bsl=document.getElementById('panel-blur-slider');if(bsl)bsl.value=0;
+const bll=document.getElementById('panel-blur-lbl');if(bll)bll.textContent='0px';
+const bss=document.getElementById('bg-size-select');if(bss)bss.value='cover';
+toast('All data reset','ok');}
 
 // ══ PRINT ══
-function printCombo(){
-  // If a combo is loaded in the viewer, print that. Otherwise print the current flow view.
+function printCombo(mode){
+  // mode: 'modern' (default) or 'legacy'
   const name=S.currentCombo;
   const combo=name?S.combos[name]:null;
+  if(!mode)mode='modern';
 
-  // Build the print HTML
-  const css=`
+  // ── Legacy CSS (original compact style) ──
+  const legacyCss=`
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:system-ui,sans-serif;background:#fff;color:#111;padding:18px;font-size:11pt;line-height:1.5}
     h1{font-size:16pt;font-weight:700;margin-bottom:10px;border-bottom:2px solid #222;padding-bottom:6px}
@@ -2280,9 +2393,34 @@ function printCombo(){
     .emoji-card{font-size:32px;line-height:1;text-align:center;min-width:40px}
   `;
 
+  // ── Modern CSS (printer-optimised: @page, colour-print flags, better breaks) ──
+  const modernCss=`
+    @page{size:A4;margin:15mm 12mm}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{font-family:system-ui,-apple-system,sans-serif;background:#fff;color:#111;font-size:10pt;line-height:1.55}
+    h1{font-size:15pt;font-weight:800;margin-bottom:12px;border-bottom:2.5px solid #1a1a1a;padding-bottom:7px;display:flex;align-items:center;gap:8px}
+    .step{display:grid;grid-template-columns:28px 1fr;gap:10px;margin-bottom:12px;break-inside:avoid;page-break-inside:avoid;border:1px solid #d0d8e0;border-radius:8px;padding:10px;background:#fafcff}
+    .step-num{background:#1a2a3a;color:#fff;font-weight:800;font-size:9pt;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .step-body{min-width:0}
+    .step-cards{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:7px;align-items:flex-end}
+    .step-cards img{height:72px;width:auto;object-fit:contain;border-radius:4px;border:1px solid #c8d0da;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+    .card-lbl{font-size:7.5pt;color:#4a5568;text-align:center;margin-top:2px;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .card-item{display:flex;flex-direction:column;align-items:center}
+    .step-text{font-size:10pt;white-space:pre-wrap;color:#222;line-height:1.6}
+    .int{border-left:3px solid #c0392b;padding:4px 8px;background:#fef5f5;font-size:9pt;margin-top:5px;border-radius:0 5px 5px 0}
+    .int-label{font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#b03020;margin-bottom:2px;letter-spacing:.04em}
+    .footer{margin-top:20px;font-size:8pt;color:#7a8a9a;border-top:1px solid #d8e0ea;padding-top:9px;display:flex;justify-content:space-between}
+    .emoji-card{font-size:30px;line-height:1;text-align:center;min-width:38px}
+    .no-cards-msg{font-size:8.5pt;color:#888;font-style:italic}
+    @media print{.step{background:#fafcff!important}body{background:#fff!important}}
+  `;
+
+  const css=mode==='legacy'?legacyCss:modernCss;
+
   if(!combo){
-    // No combo loaded — guide the user
     const w=window.open('','_blank','width=700,height=500');
+    if(!w)return toast('Pop-up blocked — allow pop-ups for this site','warn',4000);
     w.document.write(`<!DOCTYPE html><html><head><title>Print — Combo Master</title><style>${css}</style></head><body><h1>Nothing to print</h1><p style="margin-top:12px">Select a combo in the <strong>Viewer</strong> tab first, then click 🖨 Print.</p></body></html>`);
     w.document.close();w.print();return;
   }
@@ -2290,31 +2428,56 @@ function printCombo(){
   function buildCardHtml(item){
     if(item.emoji)return`<div class="card-item"><div class="emoji-card">${item.emoji}</div><div class="card-lbl">${esc(item.name||item.emoji)}</div></div>`;
     const src=cardSrc(item);
-    return`<div class="card-item">${src?`<img src="${src}" alt="${esc(item.name||'')}">`:''}<div class="card-lbl">${esc((item.name||'').substring(0,12))}</div></div>`;
+    return`<div class="card-item">${src?`<img src="${src}" loading="eager" alt="${esc(item.name||'')}">`:''}<div class="card-lbl">${esc((item.name||'').substring(0,14))}</div></div>`;
   }
 
   const stepsHtml=combo.map((step,i)=>{
     const items=step.cards?.length?step.cards:(step.card?[{type:'card',name:step.card,imageUrl:step.imageUrl||''}]:[]);
-    const cardsHtml=items.length?`<div class="step-cards">${items.map(buildCardHtml).join('')}</div>`:'';
-    const intsHtml=(step.interruptions?.length)?step.interruptions.map(it=>`<div class="int"><div class="int-label">⚡ ${it.severity||'medium'} — Interruption</div>${esc(it.text||it)}</div>`).join(''):'';
+    const cardsHtml=items.length?`<div class="step-cards">${items.map(buildCardHtml).join('')}</div>`:
+      (mode==='modern'?'<div class="no-cards-msg">No cards assigned</div>':'');
+    const intsHtml=(step.interruptions?.length)?step.interruptions.map(it=>`<div class="int"><div class="int-label">⚡ ${esc(it.severity||'medium')} — Response</div>${esc(it.text||it)}</div>`).join(''):'';
     return`<div class="step"><div class="step-num">${i+1}</div><div class="step-body">${cardsHtml}<div class="step-text">${esc(step.text||'')}</div>${intsHtml}</div></div>`;
   }).join('');
 
-  const html=`<!DOCTYPE html><html><head><title>${esc(name)} — Combo Master</title><style>${css}</style></head><body>
+  const date=new Date().toLocaleDateString();
+  const html=`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>${esc(name)} — Combo Master</title><style>${css}</style></head><body>
     <h1>🃏 ${esc(name)}</h1>
     ${stepsHtml}
-    <div class="footer">Printed from Combo Master · ${combo.length} step${combo.length!==1?'s':''}</div>
-    <script>window.onload=function(){window.print();}<\/script>
+    <div class="footer"><span>Printed from Combo Master</span><span>${combo.length} step${combo.length!==1?'s':''} · ${date}</span></div>
+    <script>
+      // Wait for all images to load before printing
+      window.addEventListener('load',function(){
+        var imgs=document.images,loaded=0,total=imgs.length;
+        if(!total){window.print();return;}
+        function done(){if(++loaded>=total)window.print();}
+        for(var i=0;i<total;i++){if(imgs[i].complete)done();else{imgs[i].onload=done;imgs[i].onerror=done;}}
+      });
+    <\/script>
   </body></html>`;
 
-  const w=window.open('','_blank','width=860,height=900');
+  const w=window.open('','_blank','width=900,height=980');
+  if(!w)return toast('Pop-up blocked — allow pop-ups for this site','warn',4000);
   w.document.write(html);w.document.close();
 }
+
+function printComboLegacy(){printCombo('legacy');}
 function loadEmbeddedState(){const el=document.getElementById('emd');if(!el)return;try{const d=JSON.parse(el.textContent);const hasLocal=Object.keys(localStorage).some(k=>k.startsWith(SK));if(!hasLocal){Object.assign(S,d);if(d.deckSections)S.deckSections=d.deckSections;if(d.stepNumInline!=null)S.stepNumInline=d.stepNumInline;saveAll();sv('cardImages',S.cardImages);sv('icons',S.icons);}}catch(e){console.warn(e);}}
 
 // ══ INIT ══
 document.addEventListener('DOMContentLoaded',()=>{
-  loadEmbeddedState();loadAll();migrate();
+  loadEmbeddedState();loadAll();
+// Sync proxy UI to loaded prefs
+(function(){
+  const pb=document.getElementById('proxyToggleBtn');
+  if(pb)pb.textContent='Proxy: '+(CM_PROXY_ENABLED?'ON':'OFF');
+  const ab=document.getElementById('proxyApiBtn');
+  if(ab)ab.textContent='API Proxy: '+(CM_PROXY_API_ENABLED?'ON':'OFF');
+  const ci=document.getElementById('customProxyInput');
+  if(ci)ci.value=CM_PROXY_CUSTOM||'';
+  const as=document.getElementById('apiSourceSelect');
+  if(as)as.value=CM_API_SOURCE||'ygoprodeck';
+  cmBgRestoreFromStorage();
+})();migrate();
   cmLoadCardCache(); // restore search result cache from localStorage
   hiddenFonts=new Set(S.hiddenFonts||[]);
   applyTheme(S.themeIndex);applyFonts();applyUIScale(S.uiScale);applyLayout(S.layoutMode);
@@ -2546,7 +2709,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 
   // HEADER / MISC
-  document.getElementById('btn-print').addEventListener('click',printCombo);
+  const _pm=document.getElementById('print-menu');
+  const _pb=document.getElementById('btn-print');
+  if(_pb&&_pm){
+    _pb.addEventListener('click',e=>{e.stopPropagation();_pm.style.display=_pm.style.display==='none'?'block':'none';});
+    document.addEventListener('click',()=>{if(_pm)_pm.style.display='none';});
+  }
   document.getElementById('btn-cache-cards').addEventListener('click',cmCacheAllCards);
   document.getElementById('lightbox').addEventListener('click',e=>{if(e.target.id==='lightbox'||e.target.id==='lightbox-img')document.getElementById('lightbox').classList.remove('open');});
   document.getElementById('lightbox-close').addEventListener('click',()=>document.getElementById('lightbox').classList.remove('open'));
@@ -2582,174 +2750,241 @@ window.addEmojiAsIcon=addEmojiAsIcon;window.openEmojiModal=openEmojiModal;
 window.addCardNameToDeck=addCardNameToDeck;window.setCardApi=setCardApi;
 window.cmGetCardByName=cmGetCardByName;window.cmEnsureCardImageCached=cmEnsureCardImageCached;window.cmCacheAllCards=cmCacheAllCards;
 
-// ── Proxy configuration ──
-let CM_PROXY_ENABLED = false;
-let CM_PROXY_API_ENABLED = false;
-let CM_PROXY_CUSTOM = "";
-let useProxy = false;
-let customProxy = "";
-
-// ── Centralized fetch wrapper ──
-function cmBuildProxiedUrl(url) {
-  const base = CM_PROXY_CUSTOM || customProxy || "https://cmw.cm-v1.workers.dev/?url=";
-  return base + encodeURIComponent(url);
+// ── New patch: standalone data-fetch aliases + deck builder inheritance ──
+async function cmSearchYGOPRODeck(name){
+  let res=await cmFetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(name)}`,{},{isApi:true});
+  if(!res)res=await cmFetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(name)}`,{},{isApi:true});
+  return res?res.json():null;
 }
-
-async function cmFetch(url, opts = {}, { isApi = false, isImage = false } = {}) {
-  const proxyOn = CM_PROXY_ENABLED || useProxy;
-  const proxyApi = CM_PROXY_API_ENABLED;
-  const shouldProxy =
-    proxyOn && ((isApi && proxyApi) || (isImage && !isApi));
-
-  const finalUrl = shouldProxy ? cmBuildProxiedUrl(url) : url;
-
-  try {
-    const res = await fetch(finalUrl, opts);
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    return res;
-  } catch (e) {
-    console.warn("cmFetch failed:", finalUrl, e);
-    return null;
+async function cmFetchYGOPrices(name){
+  const res=await cmFetch(`https://yugiohprices.com/api/get_card_prices/${encodeURIComponent(name)}`,{},{isApi:true});
+  return res?res.json():null;
+}
+async function cmLoadYamlYugiCards(){
+  // ~98MB — not feasible; return empty
+  console.warn('cmLoadYamlYugiCards: bulk YAML unavailable (~98MB).');
+  return [];
+}
+let CM_API_SOURCE='ygoprodeck';
+function cmSetApiSource(src){CM_API_SOURCE=src;sv('apiSource',src);}
+async function cmDeckBuilderSearch(name){
+  switch(CM_API_SOURCE){
+    case 'yaml-yugi': return await cmLoadYamlYugiCards();
+    case 'master-duel': await cmLoadMasterDuelDB(); return cmMasterDuelSearch(name);
+    default: return await cmSearchYGOPRODeck(name);
   }
 }
 
-// ── YGOPRODeck search with exact→fuzzy fallback ──
-async function cmSearchYGOPRODeck(name) {
-  let res = await cmFetch(
-    `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(name)}`,
-    {},
-    { isApi: true }
-  );
-  if (!res || !res.ok) {
-    res = await cmFetch(
-      `https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(name)}`,
-      {},
-      { isApi: true }
-    );
-  }
-  return res && res.ok ? res.json() : null;
+// ── Debug panel + network test + Worker health ──
+let _cmLastUrl='';
+let _cmLastError='';
+
+function cmDebugLog(msg){
+  _cmLastUrl=msg;
+  const panel=document.getElementById('cm-debug-panel');
+  if(!panel||panel.style.display==='none')return;
+  const line=document.createElement('div');
+  line.textContent=new Date().toLocaleTimeString()+' '+msg;
+  panel.appendChild(line);
+  panel.scrollTop=panel.scrollHeight;
 }
 
-// ── YGOPrices via Worker proxy ──
-async function cmFetchYGOPrices(name) {
-  const url = `https://yugiohprices.com/api/get_card_prices/${encodeURIComponent(name)}`;
-  const res = await cmFetch(url, {}, { isApi: true });
-  return res && res.ok ? res.json() : null;
-}
-
-// ── YAML‑Yugi loader ──
-async function cmLoadYamlYugiCards() {
-  const res = await cmFetch(
-    "https://dawnbrandbots.github.io/yaml-yugi/cards.json",
-    {},
-    { isApi: true }
-  );
-  if (!res || !res.ok) return [];
-  try {
-    return await res.json();
-  } catch (e) {
-    console.warn("YAML‑Yugi JSON parse failed:", e);
-    return [];
+function cmToggleDebugPanel(){
+  const panel=document.getElementById('cm-debug-panel');
+  if(!panel)return;
+  const open=panel.style.display==='none';
+  panel.style.display=open?'block':'none';
+  if(open){
+    panel.innerHTML='';
+    cmDebugLog('Proxy: '+(CM_PROXY_ENABLED?'ON':'OFF'));
+    cmDebugLog('API Proxy: '+(CM_PROXY_API_ENABLED?'ON':'OFF'));
+    cmDebugLog('API Source: '+CM_API_SOURCE);
+    cmDebugLog('Custom Proxy: '+(CM_PROXY_CUSTOM||'(default worker)'));
+    cmDebugLog('Last URL: '+(_cmLastUrl||'none'));
+    cmDebugLog('Last Error: '+(_cmLastError||'none'));
   }
 }
 
-// ── Master Duel loader ──
-let CM_MD_DB = [];
-async function cmLoadMasterDuelDB() {
-  if (CM_MD_DB.length) return;
-  let res = await cmFetch(
-    "https://dawnbrandbots.github.io/yaml-yugi/master-duel-raw.json",
-    {},
-    { isApi: true }
-  );
-  if (!res || !res.ok) {
-    res = await cmFetch(
-      "https://raw.githubusercontent.com/dawnbrandbots/yaml-yugi/refs/heads/main/master-duel-raw.json",
-      {},
-      { isApi: true }
-    );
+async function cmNetworkTest(){
+  const panel=document.getElementById('cm-debug-panel');
+  if(panel)panel.style.display='block';
+  panel.innerHTML='';
+  cmDebugLog('Running network test…');
+  const tests=[
+    ['YGOPRODeck','https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician',{isApi:true}],
+    ['YGOPrices','https://yugiohprices.com/api/get_card_prices/Dark%20Magician',{isApi:true}],
+    ['MD Raw (GitHub)','https://raw.githubusercontent.com/dawnbrandbots/yaml-yugi/refs/heads/main/master-duel-raw.json',{isApi:true}],
+    ['Worker','https://cmw.cm-v1.workers.dev/?url='+encodeURIComponent('https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician'),{}],
+  ];
+  for(const [label,url,opts] of tests){
+    try{
+      const res=await cmFetch(url,{},opts);
+      cmDebugLog(label+': '+(res?'✅ OK':'❌ null/fail'));
+    }catch(e){
+      cmDebugLog(label+': ❌ '+e.message);
+    }
   }
-  if (!res || !res.ok) return;
-  try {
-    CM_MD_DB = await res.json();
-  } catch (e) {
-    console.warn("Master Duel DB JSON parse failed:", e);
+  cmDebugLog('Test complete.');
+}
+
+async function cmWorkerHealthCheck(){
+  const panel=document.getElementById('cm-debug-panel');
+  if(panel)panel.style.display='block';
+  panel.innerHTML='';
+  cmDebugLog('Checking Worker health…');
+  const workerBase=CM_PROXY_CUSTOM||'https://cmw.cm-v1.workers.dev/?url=';
+  const testUrl=workerBase+encodeURIComponent('https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician');
+  try{
+    const res=await fetch(testUrl);
+    if(res.ok){
+      cmDebugLog('Worker: ✅ reachable (HTTP '+res.status+')');
+    } else {
+      cmDebugLog('Worker: ⚠ HTTP '+res.status);
+      _cmLastError='Worker HTTP '+res.status;
+    }
+  }catch(e){
+    cmDebugLog('Worker: ❌ '+e.message);
+    _cmLastError=e.message;
   }
 }
 
-function cmMasterDuelSearch(name) {
-  if (!CM_MD_DB.length) return [];
-  const q = name.toLowerCase();
-  return CM_MD_DB
-    .filter(c => (c.name?.en || c.en?.name || "").toLowerCase().includes(q))
-    .slice(0, 20)
-    .map(c => {
-      const cname = c.name?.en || c.en?.name || "";
-      const pass = c.password || c.id || "";
-      const img = pass
-        ? `https://images.ygoprodeck.com/images/cards_small/${pass}.jpg`
-        : (c.card_images?.[0]?.image_url_small || c.images?.[0] || "");
-      return { name: cname, img };
-    })
-    .filter(c => c.name);
+// Patch cmFetch to log last URL for debug
+const _cmFetchOrig=cmFetch;
+window.cmFetch=async function(url,opts={},flags={}){
+  _cmLastUrl=url;
+  const r=await _cmFetchOrig(url,opts,flags);
+  if(!r)_cmLastError='null response from '+url;
+  cmDebugLog((r?'✅':'❌')+' '+url.slice(0,80));
+  return r;
+};
+
+// ── Background Image system ──
+let CM_BG_IMAGE_DATA=''; // base64 data URL
+
+function cmBgImageUpload(input){
+  const file=input.files?.[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    CM_BG_IMAGE_DATA=e.target.result;
+    cmBgImageApply();
+    // Show preview
+    const prev=document.getElementById('bg-image-preview');
+    const img=document.getElementById('bg-preview-img');
+    if(prev&&img){img.src=CM_BG_IMAGE_DATA;prev.style.display='block';}
+    // Ask about transparency presets
+    cmBgTransparencyPrompt();
+    sv('bgImageData',CM_BG_IMAGE_DATA);
+  };
+  reader.readAsDataURL(file);
+  input.value='';
 }
 
-// ── Unified fallback chain ──
-async function fetchCards(name) {
-  await cmLoadMasterDuelDB();
-  let data =
-    (await cmSearchYGOPRODeck(name)) ||
-    (await cmFetchYGOPrices(name)) ||
-    (await cmLoadYamlYugiCards()) ||
-    cmMasterDuelSearch(name);
+function cmBgImageApply(){
+  if(!CM_BG_IMAGE_DATA){document.documentElement.style.removeProperty('--bg-image');return;}
+  document.documentElement.style.setProperty('--bg-image',`url("${CM_BG_IMAGE_DATA}")`);
+  const sizeEl=document.getElementById('bg-size-select');
+  const size=sizeEl?sizeEl.value:'cover';
+  cmBgSizeChange(size,true);
+}
 
-  if (!data || (Array.isArray(data) && !data.length)) {
-    console.warn("All sources failed — offline fallback triggered.");
-    return [];
+function cmBgSizeChange(val,silent){
+  const customRow=document.getElementById('bg-custom-size-row');
+  if(val==='tile'){
+    document.documentElement.style.setProperty('--bg-image-size','auto');
+    document.documentElement.style.setProperty('--bg-image-repeat','repeat');
+    if(customRow)customRow.style.display='none';
+  } else if(val==='custom'){
+    if(customRow)customRow.style.display='flex';
+    document.documentElement.style.setProperty('--bg-image-repeat','no-repeat');
+  } else {
+    document.documentElement.style.setProperty('--bg-image-size',val);
+    document.documentElement.style.setProperty('--bg-image-repeat','no-repeat');
+    if(customRow)customRow.style.display='none';
   }
-  return data;
+  if(!silent)sv('bgSize',val);
 }
 
-// ── Proxy toggles ──
-function toggleProxyImages(on) {
-  CM_PROXY_ENABLED = !!on;
-  useProxy = !!on;
-  console.log("Proxy Images:", CM_PROXY_ENABLED);
+function cmBgApplyCustomSize(){
+  const inp=document.getElementById('bg-custom-size-input');
+  if(!inp||!inp.value.trim())return;
+  document.documentElement.style.setProperty('--bg-image-size',inp.value.trim());
+  document.documentElement.style.setProperty('--bg-image-repeat','no-repeat');
+  sv('bgCustomSize',inp.value.trim());
+  sv('bgSize','custom');
 }
 
-function toggleProxyAPI(on) {
-  CM_PROXY_API_ENABLED = !!on;
-  console.log("Proxy API Calls:", CM_PROXY_API_ENABLED);
+function cmBgImageClear(){
+  CM_BG_IMAGE_DATA='';
+  document.documentElement.style.removeProperty('--bg-image');
+  const prev=document.getElementById('bg-image-preview');
+  if(prev)prev.style.display='none';
+  sv('bgImageData','');
+  toast('Background image removed','ok');
 }
 
-function toggleProxyEverything(on) {
-  CM_PROXY_ENABLED = !!on;
-  CM_PROXY_API_ENABLED = !!on;
-  useProxy = !!on;
-  console.log("Proxy Everything:", CM_PROXY_ENABLED, CM_PROXY_API_ENABLED);
+function cmPanelBlurChange(val){
+  document.documentElement.style.setProperty('--panel-blur',val+'px');
+  const lbl=document.getElementById('panel-blur-lbl');
+  if(lbl)lbl.textContent=val+'px';
+  sv('panelBlur',parseInt(val));
 }
 
-// ── Deck Builder API source inheritance ──
-let CM_API_SOURCE = "ygoprodeck";
-
-function cmSetApiSource(src) {
-  CM_API_SOURCE = src;
+function cmBgTransparencyPrompt(){
+  // Offer quick transparency presets via a simple in-page modal
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML=`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1.2rem;max-width:360px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+      <h3 style="margin-bottom:.6rem;color:var(--accent2)">🖼 Background image set!</h3>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:.8rem">Set panel transparency so the image shows through? You can fine-tune later in Custom Colours.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:.7rem">
+        ${[20,40,60,80,100].map(p=>`<button class="btn sm" onclick="cmBgApplyTransparencyPreset(${p});this.closest('[style]').parentElement.remove()">${p}% opacity</button>`).join('')}
+        <button class="btn sm sec" onclick="this.closest('[style]').parentElement.remove()">Keep current</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
 }
 
-async function cmDeckBuilderSearch(name) {
-  switch (CM_API_SOURCE) {
-    case "ygoprodeck":
-      return await cmSearchYGOPRODeck(name);
-    case "yaml-yugi":
-      const yamlCards = await cmLoadYamlYugiCards();
-      return yamlCards.filter(c =>
-        (c.name?.en || "").toLowerCase().includes(name.toLowerCase())
-      );
-    case "master-duel":
-      await cmLoadMasterDuelDB();
-      return cmMasterDuelSearch(name);
-    default:
-      return await cmSearchYGOPRODeck(name);
+function cmBgApplyTransparencyPreset(pct){
+  const alpha=pct/100;
+  // Apply to BG and Panel BG layers only
+  ['--bg','--surface','--surface2','--surface3'].forEach(v=>{
+    const cur=getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    const hex=toHex(cur);
+    const val=hexToRgba(hex,alpha);
+    S.customTheme[v]=val;
+    document.documentElement.style.setProperty(v,val);
+  });
+  sv('customTheme',S.customTheme);
+  renderColorGrid();
+  toast('Transparency set to '+pct+'%','ok');
+}
+
+function cmBgRestoreFromStorage(){
+  const data=ld('bgImageData','');
+  const size=ld('bgSize','cover');
+  const customSize=ld('bgCustomSize','');
+  const blur=ld('panelBlur',0);
+  if(data){
+    CM_BG_IMAGE_DATA=data;
+    cmBgImageApply();
+    const prev=document.getElementById('bg-image-preview');
+    const img=document.getElementById('bg-preview-img');
+    if(prev&&img){img.src=data;prev.style.display='block';}
+    const sel=document.getElementById('bg-size-select');
+    if(sel)sel.value=size;
+    cmBgSizeChange(size,true);
+    if(size==='custom'&&customSize){
+      const inp=document.getElementById('bg-custom-size-input');
+      if(inp)inp.value=customSize;
+      document.documentElement.style.setProperty('--bg-image-size',customSize);
+    }
+  }
+  if(blur){
+    cmPanelBlurChange(blur);
+    const sl=document.getElementById('panel-blur-slider');
+    if(sl)sl.value=blur;
   }
 }
 </script>
