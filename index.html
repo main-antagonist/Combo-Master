@@ -9,6 +9,8 @@
 :root{
   --bg:#060e1a;--surface:#0d1f36;--surface2:#142b47;--surface3:#1c3a60;
   --bg-image:none;--bg-image-size:cover;--bg-image-repeat:no-repeat;--panel-blur:0px;
+  --dropdown-bg:#142b47;  /* always opaque — never use alpha here */
+  --dropdown-hover:#1c3a60;
   --border:#254d72;--text:#d4eaf5;--muted:#7aa0be;
   --accent:#d4a017;--accent2:#ffd055;--accentH:#e8b520;
   --link:#5bc8f5;--danger:#c0392b;--dangerH:#e74c3c;--ok:#27ae60;--warn:#e67e22;
@@ -23,7 +25,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;overflow-x:hidden}
 body{font-family:var(--body-font);background:var(--bg);color:var(--text);min-height:100vh;font-size:1rem;line-height:1.55;background-image:var(--bg-image,none);background-size:var(--bg-image-size,cover);background-repeat:var(--bg-image-repeat,no-repeat);background-position:center center;background-attachment:fixed}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;margin-bottom:.75rem;width:100%;backdrop-filter:blur(var(--panel-blur,0px));-webkit-backdrop-filter:blur(var(--panel-blur,0px))}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;margin-bottom:.75rem;width:100%}
 h1,h2,h3,h4{font-family:var(--head-font);color:var(--accent2);line-height:1.2}
 h1{font-size:clamp(1rem,4vw,1.6rem);letter-spacing:.04em}
 h2{font-size:clamp(.95rem,3vw,1.35rem);margin-bottom:.6rem}
@@ -94,7 +96,7 @@ label input[type=checkbox]{width:auto}
 .vresize-handle::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:16px;height:4px;background-image:radial-gradient(circle,rgba(255,255,255,.55) 1.5px,transparent 1.5px);background-size:5.5px 4px;background-repeat:repeat;pointer-events:none}
 .vresize-handle:hover::after,.vresize-handle.dragging::after{background-image:radial-gradient(circle,rgba(255,255,255,.9) 1.5px,transparent 1.5px)}
 /* API source picker popup */
-.api-popup{position:absolute;top:100%;left:0;z-index:500;background:var(--surface2);border:1px solid var(--accent);border-radius:6px;padding:.4rem;min-width:200px;box-shadow:0 6px 24px rgba(0,0,0,.6);display:none}
+.api-popup{position:absolute;top:100%;left:0;z-index:500;background:var(--dropdown-bg);border:1px solid var(--accent);border-radius:6px;padding:.4rem;min-width:200px;box-shadow:0 6px 24px rgba(0,0,0,.85);display:none;backdrop-filter:none!important}
 .api-popup.open{display:block}
 .api-opt{padding:.35rem .5rem;border-radius:4px;cursor:pointer;font-size:.75rem;display:flex;align-items:center;gap:6px;transition:background .15s}
 .api-opt:hover{background:var(--surface3)}
@@ -229,13 +231,13 @@ body.num-inline .fv-num{margin-top:0}
 .theme-swatches{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.6rem}
 .theme-sw{border:2px solid transparent;border-radius:6px;padding:0 14px;cursor:pointer;font-size:.78rem;font-weight:600;transition:all .2s;height:2rem;min-height:2rem;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
 .theme-sw.active{border-color:var(--accent2)!important;box-shadow:var(--glow)}
-.color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:5px}
-.color-field{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:5px 6px;background:var(--surface3);border-radius:5px;font-size:.78rem}
-.color-field__top{display:flex;align-items:center;gap:5px;width:100%}
-.color-field input[type=color]{flex-shrink:0;cursor:pointer;width:28px;height:22px;padding:1px;border:1px solid var(--border);border-radius:3px;background:none}
-.color-field label{flex:1;color:var(--muted);min-width:0;word-break:break-word;cursor:default;font-size:.75rem;line-height:1.3}
-.color-field .alpha-wrap{display:flex;align-items:center;gap:3px;width:100%}
-.color-field .alpha-num{flex:1;min-width:0;font-size:.7rem;padding:2px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);text-align:center}
+.color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;align-items:stretch}
+.color-field{display:grid;grid-template-rows:auto 1fr auto;gap:4px;padding:6px 8px;background:var(--surface3);border-radius:6px;font-size:.78rem}
+.color-field__top{display:flex;align-items:center;gap:6px}
+.color-field input[type=color]{flex-shrink:0;cursor:pointer;width:30px;height:24px;padding:1px;border:1px solid var(--border);border-radius:3px;background:none}
+.color-field label{flex:1;color:var(--muted);min-width:0;word-break:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;font-size:.75rem;line-height:1.35}
+.color-field .alpha-wrap{display:flex;align-items:center;gap:4px}
+.color-field .alpha-num{width:58px;font-size:.7rem;padding:2px 5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);text-align:center}
 .color-field .alpha-tag{font-size:.68rem;color:var(--muted);flex-shrink:0}
 /* CARD PICKER */
 .card-picker{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);box-shadow:0 8px 40px rgba(0,0,0,.7);padding:14px;z-index:9000;width:min(620px,94vw);height:min(680px,88vh);display:flex;flex-direction:column;gap:8px}
@@ -291,11 +293,11 @@ body.layout-portrait .wrap{max-width:680px}
 .cm-combo-clear{display:none;position:absolute;right:20px;top:50%;transform:translateY(-50%);background:none;border:none;color:#e55;cursor:pointer;font-size:.9rem;padding:0 2px;line-height:1}
 .cm-combo-clear.visible{display:block}
 .cm-combo-arrow{position:absolute;right:7px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:.6rem;color:var(--muted)}
-.cm-combo-drop{position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:600;background:var(--surface2);border:1px solid var(--accent);border-radius:6px;box-shadow:0 6px 24px rgba(0,0,0,.65);display:none;max-height:200px;overflow-y:auto;scrollbar-width:thin}
+.cm-combo-drop{position:fixed;z-index:9500;background:var(--dropdown-bg);border:1px solid var(--accent);border-radius:6px;box-shadow:0 6px 24px rgba(0,0,0,.85);display:none;max-height:220px;overflow-y:auto;scrollbar-width:thin}
 .cm-combo-drop.open{display:block}
-.cm-combo-item{padding:5px 10px;font-size:.8rem;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm-combo-item{padding:5px 10px;font-size:.8rem;cursor:pointer;color:var(--text);background:var(--dropdown-bg);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cm-combo-item:last-child{border-bottom:none}
-.cm-combo-item:hover,.cm-combo-item.kb-focus{background:var(--surface3);color:var(--accent)}
+.cm-combo-item:hover,.cm-combo-item.kb-focus{background:var(--dropdown-hover,var(--surface3));color:var(--accent)}
 .cm-combo-empty{padding:7px 10px;font-size:.75rem;color:var(--muted);font-style:italic}
 /* Editor row height fix */
 #edit-select{display:none}
@@ -839,7 +841,7 @@ My Combo Name
     <div class="panel">
       <h3>⚠️ Disclaimer</h3>
       <p style="font-size:.82rem;line-height:1.7">
-        Yu-Gi-Oh! and all card names and images are © Konami. Combo Master is a free, non-commercial fan tool that uses publicly available APIs. Card data is provided by <a href="https://ygoprodeck.com" target="_blank">YGOPRODeck</a>, <a href="https://yugiohprices.com" target="_blank">YGO Prices</a>, and <a href="https://github.com/DawnbrandBots/yaml-yugi" target="_blank">YAML-Yugi</a>. Card image downloads use <a href="https://corsproxy.io" target="_blank">corsproxy.io</a> as a client-side proxy. No copyright infringement intended.
+        Yu-Gi-Oh! and all card names and images are © Konami. Combo Master is a free, non-commercial fan tool that uses publicly available APIs. Card data is provided by <a href="https://ygoprodeck.com" target="_blank">YGOPRODeck</a>, <a href="https://yugiohprices.com" target="_blank">YGO Prices</a>, and <a href="https://github.com/DawnbrandBots/yaml-yugi" target="_blank">YAML-Yugi</a>. Card image downloads use a configurable client-side proxy (default: cmw.cm-v1.workers.dev). No copyright infringement intended.
       </p>
     </div>
   </div>
@@ -1018,7 +1020,7 @@ const DEF_THEMES=[
   {name:'Gloomy',sw:'#303030',lt:false,v:{'--bg':'#000000','--surface':'#000000','--surface2':'#303030','--surface3':'#4b4b4b','--border':'#4b4b4b','--accent':'#c8c8c8','--accent2':'#c8c8c8','--accentH':'#960000','--link':'#0069cc','--text':'#c8c8c8','--muted':'#c8c8c8','--num-text':'#000000'}},
 ];
 const CLR_LABELS={'--bg':'Background','--surface':'Panel BG','--surface2':'Tab Content','--surface3':'Highlight','--border':'Borders','--accent':'Accent','--accent2':'Headings','--accentH':'Accent Hover','--link':'Links','--text':'Body Text','--muted':'Muted Text','--num-text':'Step № Text'};
-const CLR_ALPHA_VARS=new Set(['--bg','--surface','--surface2','--surface3']);
+const CLR_ALPHA_VARS=new Set(Object.keys(CLR_LABELS)); // all colours support alpha
 
 // ── STATE ──
 let S={
@@ -1095,9 +1097,9 @@ function toggleProxy(){
   const btn=document.getElementById('proxyToggleBtn');
   if(btn)btn.textContent='Proxy: '+(CM_PROXY_ENABLED?'ON':'OFF');
 }
-function toggleProxyImages(on){CM_PROXY_ENABLED=!!on;useProxy=!!on;console.log('Proxy Images:',CM_PROXY_ENABLED);}
+function toggleProxyImages(on){CM_PROXY_ENABLED=!!on;useProxy=!!on;sv('proxyEnabled',CM_PROXY_ENABLED);console.log('Proxy Images:',CM_PROXY_ENABLED);}
 function toggleProxyAPI(on){CM_PROXY_API_ENABLED=!!on;sv('proxyApiEnabled',CM_PROXY_API_ENABLED);console.log('Proxy API:',CM_PROXY_API_ENABLED);}
-function toggleProxyEverything(on){CM_PROXY_ENABLED=!!on;CM_PROXY_API_ENABLED=!!on;useProxy=!!on;console.log('Proxy Everything:',CM_PROXY_ENABLED);}
+function toggleProxyEverything(on){CM_PROXY_ENABLED=!!on;CM_PROXY_API_ENABLED=!!on;useProxy=!!on;sv('proxyEnabled',CM_PROXY_ENABLED);sv('proxyApiEnabled',CM_PROXY_API_ENABLED);console.log('Proxy Everything:',CM_PROXY_ENABLED);}
 
 function applyCustomProxy(){
   const v=document.getElementById('customProxyInput');
@@ -1205,7 +1207,7 @@ function initVerticalResizes(){
     });
   });
 }
-function applyTheme(idx){const t=DEF_THEMES[idx]||DEF_THEMES[0];const r=document.documentElement.style;for(const[k,v]of Object.entries(t.v))r.setProperty(k,v);for(const[k,v]of Object.entries(S.customTheme))r.setProperty(k,v);S.themeIndex=idx;sv('theme',idx);renderThemeSwatches();}
+function applyTheme(idx){const t=DEF_THEMES[idx]||DEF_THEMES[0];const r=document.documentElement.style;for(const[k,v]of Object.entries(t.v))r.setProperty(k,v);for(const[k,v]of Object.entries(S.customTheme))r.setProperty(k,v);const s2=toHex(t.v['--surface2']||'#142b47');r.setProperty('--dropdown-bg',s2);const s3=toHex(t.v['--surface3']||'#1c3a60');r.setProperty('--dropdown-hover',s3);S.themeIndex=idx;sv('theme',idx);renderThemeSwatches();}
 
 // ── LAYOUT MODE ──
 function applyLayout(mode){
@@ -1273,6 +1275,8 @@ function cmComboInit(inputId, dropId, selectId, onSelect){
   if(!inp||!drop||!sel)return;
   const key=inputId;
   _cmcState[key]={inputId,dropId,selectId,onSelect,kbIdx:-1};
+  // Move dropdown to body to escape all stacking contexts
+  if(drop.parentElement!==document.body)document.body.appendChild(drop);
   // Clear button setup
   const clrBtn=inp.closest('.cm-combo-wrap')?.querySelector('.cm-combo-clear');
   function syncClear(){
@@ -1293,8 +1297,16 @@ function cmComboInit(inputId, dropId, selectId, onSelect){
   // Sync input display from hidden select's current value
   inp.value=sel.value?sel.options[sel.selectedIndex]?.text||'':'';
   syncClear();
-  function open(){cmComboRender(key,inp.value);drop.classList.add('open');}
+  function positionDrop(){
+    const rect=inp.getBoundingClientRect();
+    drop.style.top=(rect.bottom+2)+'px';
+    drop.style.left=rect.left+'px';
+    drop.style.width=rect.width+'px';
+  }
+  function open(){cmComboRender(key,inp.value);positionDrop();drop.classList.add('open');}
   function close(){drop.classList.remove('open');_cmcState[key].kbIdx=-1;}
+  window.addEventListener('resize',()=>{if(drop.classList.contains('open'))positionDrop();},true);
+  window.addEventListener('scroll',()=>{if(drop.classList.contains('open'))positionDrop();},{passive:true,capture:true});
   inp.addEventListener('focus',()=>open());
   inp.addEventListener('input',()=>{_cmcState[key].kbIdx=-1;syncClear();cmComboRender(key,inp.value);drop.classList.add('open');});
   inp.addEventListener('keydown',e=>{
@@ -1721,7 +1733,7 @@ function renderApiPopup(){
   if(S.cardSearchApiIdx>=sources.length)S.cardSearchApiIdx=0;
   if(lbl)lbl.textContent=sources[S.cardSearchApiIdx]?.label||'Unknown';
   const notes={
-    'masterduel://'  :'🎮 Offline · MD-eligible pool · instant after first load',
+    'masterduel://'  :'🎮 Offline · Per‑card cache · Refresh to sync',
     'yugiohprices'   :'💰 Exact name only · fetches image via YGOPRODeck',
     'format=master+duel':'✅ Strict MD-legal · live API · most accurate',
     'fname='         :'🔍 Fuzzy name match · broadest results',
@@ -1757,7 +1769,7 @@ function renderApiHelpPopup(){
       <div><b>YGOPRODeck (fuzzy)</b> — Best default. Broadest results.</div>
       <div><b>YGOPRODeck (exact)</b> — Faster if you know the full name.</div>
       <div><b>Master Duel (strict)</b> — Only cards legal in MD right now.</div>
-      <div><b>Master Duel (offline)</b> — No internet needed after first load. Slightly ahead of in-game releases.</div>
+      <div><b>Master Duel (offline)</b> — Caches each card the first time you view it. Refresh when switching modes.</div>
       <div><b>YGO Prices</b> — Exact name search + price data source.</div>
     </div>
     <div style="margin:.5rem 0;border-top:1px solid var(--border)"></div>
@@ -1845,11 +1857,28 @@ function cmMasterDuelSearch(name){
     .slice(0,20)
     .map(c=>{
       const cname=c.name?.en||c.en?.name||c.en_name||'';
-      const pass=c.password||c.id||'';
-      const img=pass?`https://images.ygoprodeck.com/images/cards_small/${pass}.jpg`
-                    :(c.card_images?.[0]?.image_url_small||c.images?.[0]||'');
-      return{name:cname,img};
+      const pass=c.password||c.id||c.konami_id||'';
+      // Try ygoprodeck image by password if available
+      // Check card cache first (populated when cards were previously searched via YGO)
+      const cached=cmGetCached(cname);
+      const img=cached?.img||
+                (pass?`https://images.ygoprodeck.com/images/cards_small/${pass}.jpg`:'');
+      return{name:cname,img,_mdCard:c};
     }).filter(c=>c.name);
+}
+
+// Enrich MD results with YGOPRODeck images asynchronously
+async function cmEnrichMdResults(results,renderFn){
+  if(!results.length)return;
+  // For cards with no image, fetch from YGOPRODeck and cache
+  const needsImg=results.filter(r=>!r.img);
+  for(const r of needsImg.slice(0,10)){
+    try{
+      const card=await cmYgoproExact(r.name);
+      if(card?.img){r.img=card.img;cmSetCached(r.name,card);}
+    }catch{}
+  }
+  if(renderFn)renderFn(results);
 }
 
 // ── YGOPRODeck helpers ──
@@ -1892,7 +1921,9 @@ async function cmSearch(q,apiIdx){
     if(!CM_MD_DB.length){
       try{return await cmYgoproFuzzy(q);}catch{return[];}
     }
-    return cmMasterDuelSearch(q);
+    const mdResults=cmMasterDuelSearch(q);
+    cmEnrichMdResults(mdResults,null);
+    return mdResults;
 
   } else if(url.includes('ygoprodeck')){
     const fuzzy=url.includes('fname=');
@@ -1963,12 +1994,10 @@ async function cmCacheAllCards(){
 
   toast(`Fetching ${total} card image${total!==1?'s':''}… this may take a moment`,'ok',6000);
 
-  // CORS proxy — needed because images.ygoprodeck.com has no CORS headers
-  // corsproxy.io adds Access-Control-Allow-Origin to any request
-  const PROXY='https://corsproxy.io/?url=';
+  // Image proxy — routes through the app proxy system (respects proxy ON/OFF and custom proxy URL)
   function proxied(url){
     if(!url||url.startsWith('data:'))return url;
-    return PROXY+encodeURIComponent(url);
+    return buildImageUrl(url);
   }
 
   // Fetch image bytes via proxy, return Uint8Array or null
@@ -2035,7 +2064,7 @@ async function cmCacheAllCards(){
 
   if(done===0){
     if(btn){btn.disabled=false;btn.textContent='⬇ Download Cards';}
-    toast(`No images fetched — ${noUrl} had no URL, ${failed} failed. Is corsproxy.io reachable?`,'danger',6000);
+    toast(`No images fetched — ${noUrl} had no URL, ${failed} failed. Check proxy settings or enable proxy in Settings.`,'danger',6000);
     return;
   }
 
@@ -2349,7 +2378,13 @@ function applyCustomTheme(){
     S.customTheme[v]=val;
     document.documentElement.style.setProperty(v,val);
   });
-  sv('customTheme',S.customTheme);toast('Colours applied','ok');
+  sv('customTheme',S.customTheme);
+  // Always keep dropdown fully opaque regardless of surface alpha
+  const s2hex=toHex(S.customTheme['--surface2']||getComputedStyle(document.documentElement).getPropertyValue('--surface2').trim()||'#142b47');
+  document.documentElement.style.setProperty('--dropdown-bg',s2hex);
+  const s3hex=toHex(S.customTheme['--surface3']||getComputedStyle(document.documentElement).getPropertyValue('--surface3').trim()||'#1c3a60');
+  document.documentElement.style.setProperty('--dropdown-hover',s3hex);
+  toast('Colours applied','ok');
 }
 function resetCustomTheme(){S.customTheme={};sv('customTheme',{});applyTheme(S.themeIndex);renderColorGrid();toast('Colours reset',`ok`);}
 function exportTheme(){dlBlob(new Blob([JSON.stringify({themeBase:DEF_THEMES[S.themeIndex]?.name,custom:S.customTheme,bodyFont:S.bodyFont,headFont:S.headFont,uiScale:S.uiScale,cardScale:S.cardScale,deckScale:S.deckScale,deckSearchScale:S.deckSearchScale,editorScale:S.editorScale,editorSearchScale:S.editorSearchScale,emojiScale:S.emojiScale,cardImgScale:S.cardImgScale,iconImgScale:S.iconImgScale},null,2)],{type:'application/json'}),'combo-master-theme.json');toast('Theme & sliders exported',`ok`);}
@@ -2479,18 +2514,19 @@ function loadEmbeddedState(){const el=document.getElementById('emd');if(!el)retu
 // ══ INIT ══
 document.addEventListener('DOMContentLoaded',()=>{
   loadEmbeddedState();loadAll();
-// Sync proxy UI to loaded prefs
-(function(){
-  const pb=document.getElementById('proxyToggleBtn');
-  if(pb)pb.textContent='Proxy: '+(CM_PROXY_ENABLED?'ON':'OFF');
-  const ab=document.getElementById('proxyApiBtn');
-  if(ab)ab.textContent='API Proxy: '+(CM_PROXY_API_ENABLED?'ON':'OFF');
-  const ci=document.getElementById('customProxyInput');
-  if(ci)ci.value=CM_PROXY_CUSTOM||'';
-  const as=document.getElementById('apiSourceSelect');
-  if(as)as.value=CM_API_SOURCE||'ygoprodeck';
-  cmBgRestoreFromStorage();
-})();migrate();
+  // Sync proxy UI to loaded prefs — must run AFTER loadAll inside DOMContentLoaded
+  (function(){
+    const pb=document.getElementById('proxyToggleBtn');
+    if(pb)pb.textContent='Proxy: '+(CM_PROXY_ENABLED?'ON':'OFF');
+    const ab=document.getElementById('proxyApiBtn');
+    if(ab)ab.textContent='API Proxy: '+(CM_PROXY_API_ENABLED?'ON':'OFF');
+    const ci=document.getElementById('customProxyInput');
+    if(ci)ci.value=CM_PROXY_CUSTOM||'';
+    const as=document.getElementById('apiSourceSelect');
+    if(as)as.value=CM_API_SOURCE||'ygoprodeck';
+    cmBgRestoreFromStorage();
+  })();
+  migrate();
   cmLoadCardCache(); // restore search result cache from localStorage
   hiddenFonts=new Set(S.hiddenFonts||[]);
   applyTheme(S.themeIndex);applyFonts();applyUIScale(S.uiScale);applyLayout(S.layoutMode);
@@ -2958,10 +2994,18 @@ function cmBgImageClear(){
 }
 
 function cmPanelBlurChange(val){
-  document.documentElement.style.setProperty('--panel-blur',val+'px');
+  const px=parseInt(val)||0;
+  const panels=document.querySelectorAll('.panel');
+  if(px>0){
+    const rule=`blur(${px}px)`;
+    panels.forEach(p=>{p.style.backdropFilter=rule;p.style.webkitBackdropFilter=rule;});
+  } else {
+    panels.forEach(p=>{p.style.backdropFilter='';p.style.webkitBackdropFilter='';});
+  }
+  document.documentElement.style.setProperty('--panel-blur',px+'px');
   const lbl=document.getElementById('panel-blur-lbl');
-  if(lbl)lbl.textContent=val+'px';
-  sv('panelBlur',parseInt(val));
+  if(lbl)lbl.textContent=px+'px';
+  sv('panelBlur',px);
 }
 
 function cmBgTransparencyPrompt(){
@@ -3015,11 +3059,10 @@ function cmBgRestoreFromStorage(){
       document.documentElement.style.setProperty('--bg-image-size',customSize);
     }
   }
-  if(blur){
-    cmPanelBlurChange(blur);
-    const sl=document.getElementById('panel-blur-slider');
-    if(sl)sl.value=blur;
-  }
+  const blurVal=blur||0;
+  const sl=document.getElementById('panel-blur-slider');
+  if(sl)sl.value=blurVal;
+  if(blurVal>0)cmPanelBlurChange(blurVal);
 }
 </script>
 </body>
