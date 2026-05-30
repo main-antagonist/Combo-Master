@@ -1994,10 +1994,12 @@ async function cmCacheAllCards(){
 
   toast(`Fetching ${total} card image${total!==1?'s':''}… this may take a moment`,'ok',6000);
 
-  // Image proxy — routes through the app proxy system (respects proxy ON/OFF and custom proxy URL)
+  // Image downloads ALWAYS need a proxy — images.ygoprodeck.com has no CORS headers
+  // Use the configured worker regardless of proxy toggle state
   function proxied(url){
     if(!url||url.startsWith('data:'))return url;
-    return buildImageUrl(url);
+    const base=CM_PROXY_CUSTOM||customProxy||'https://cmw.cm-v1.workers.dev/?url=';
+    return base+encodeURIComponent(url);
   }
 
   // Fetch image bytes via proxy, return Uint8Array or null
