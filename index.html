@@ -290,9 +290,11 @@ body.layout-portrait .wrap{max-width:680px}
 .cm-combo-wrap{position:relative;flex:1;min-width:0}
 .cm-combo-input{width:100%;box-sizing:border-box;padding:6px 42px 6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--body-font);font-size:.82rem;cursor:text;line-height:1.4}
 .cm-combo-input:focus{outline:none;border-color:var(--accent)}
-.cm-combo-clear{display:none;position:absolute;right:20px;top:50%;transform:translateY(-50%);background:none;border:none;color:#e55;cursor:pointer;font-size:.9rem;padding:0 2px;line-height:1}
-.cm-combo-clear.visible{display:block}
-.cm-combo-arrow{position:absolute;right:7px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:.6rem;color:var(--muted)}
+.cm-combo-clear{display:none}
+.cm-combo-arrow{position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--muted);background:none;border:none;cursor:pointer;padding:2px 4px;line-height:1;transition:color .15s}
+.cm-combo-arrow:hover{color:var(--accent)}
+.cm-combo-arrow.is-clear{color:#e55;font-size:.85rem}
+.cm-combo-arrow.is-clear:hover{color:#ff7070}
 .cm-combo-drop{position:fixed;z-index:9500;background:var(--dropdown-bg);border:1px solid var(--accent);border-radius:6px;box-shadow:0 6px 24px rgba(0,0,0,.85);display:none;max-height:220px;overflow-y:auto;scrollbar-width:thin}
 .cm-combo-drop.open{display:block}
 .cm-combo-item{padding:5px 10px;font-size:.8rem;cursor:pointer;color:var(--text);background:var(--dropdown-bg);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -359,8 +361,7 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
         <select id="viewer-select" style="display:none"><option value="">— Select a combo —</option></select>
         <div class="cm-combo-wrap" id="viewer-combo-wrap">
           <input class="cm-combo-input" id="viewer-combo-input" placeholder="— Select or type a combo —" autocomplete="off">
-          <button class="cm-combo-clear" id="viewer-combo-clear">✕</button>
-          <span class="cm-combo-arrow">▼</span>
+          <button class="cm-combo-arrow" id="viewer-combo-arrow" aria-label="Toggle combo dropdown">▼</button>
           <div class="cm-combo-drop" id="viewer-combo-drop"></div>
         </div>
       </div>
@@ -412,8 +413,7 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
         <select id="edit-select" style="display:none"><option value="">— Select combo —</option></select>
         <div class="cm-combo-wrap" id="editor-combo-wrap">
           <input class="cm-combo-input" id="editor-combo-input" placeholder="— Select or type a combo —" autocomplete="off">
-          <button class="cm-combo-clear" id="editor-combo-clear">✕</button>
-          <span class="cm-combo-arrow">▼</span>
+          <button class="cm-combo-arrow" id="editor-combo-arrow" aria-label="Toggle combo dropdown">▼</button>
           <div class="cm-combo-drop" id="editor-combo-drop"></div>
         </div>
         <div class="f1"><input type="text" id="edit-name" placeholder="Combo name"></div>
@@ -444,6 +444,7 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
         <div class="ptitle" style="margin-top:.2rem">📁 Custom Cards
           <div class="scale-row" style="font-size:.68rem"><span style="color:var(--muted)">Size:</span><input type="range" id="editor-custom-scale-slider" min="40" max="500" value="110" style="width:55px"><span class="scale-lbl" id="editor-custom-scale-lbl">110px</span></div>
         </div>
+        <div class="field" style="margin-bottom:.3rem"><input type="text" id="custom-card-search" placeholder="Filter custom cards…" oninput="cmFilterCustomCards(this.value)" autocomplete="off"></div>
         <div class="card-grid" id="custom-card-grid" style="max-height:130px;overflow-y:auto"><div class="empty-msg" style="grid-column:1/-1">Upload in Images tab.</div></div>
         <div class="vresize-handle" id="vr-handle-2" title="Drag to resize custom cards area"></div>
         <div class="ptitle" style="margin-top:.2rem">🏷 Annotation Icons &amp; Symbols</div>
@@ -601,6 +602,28 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
       <p style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Select a category to browse. Click any emoji to add it as an icon.</p>
       <div id="emoji-cat-bar" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:.5rem"></div>
     </div>
+    <div class="panel" id="local-library-panel">
+      <div class="ptitle">📁 Local Card Library
+        <span id="local-lib-count" style="font-size:.72rem;color:var(--muted);margin-left:.5rem"></span>
+      </div>
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem">
+        Select your downloaded card image folder. Files are matched to card names using the Master Duel database — no internet needed after setup.
+      </p>
+      <div class="btn-row" style="flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem">
+        <label class="btn" style="cursor:pointer;font-size:.82rem">
+          📂 Select Card Folder
+          <input type="file" id="local-lib-input" webkitdirectory multiple accept="image/*" style="display:none" onchange="cmLocalLibLoad(this)">
+        </label>
+        <button class="btn sec sm" onclick="cmLocalLibClear()">✕ Clear Library</button>
+      </div>
+      <div id="local-lib-progress" style="display:none;margin-bottom:.5rem">
+        <div style="background:var(--surface3);border-radius:4px;height:8px;overflow:hidden">
+          <div id="local-lib-bar" style="height:100%;width:0%;background:var(--accent);transition:width .2s"></div>
+        </div>
+        <div id="local-lib-status" style="font-size:.72rem;color:var(--muted);margin-top:.3rem">Loading…</div>
+      </div>
+      <div id="local-lib-summary" style="display:none;font-size:.78rem;color:var(--muted)"></div>
+    </div>
   </div>
 
   <!-- ══ JSON TAB ══ -->
@@ -724,7 +747,7 @@ My Combo Name
       <h3>🖼 Background Image</h3>
       <p style="font-size:.75rem;color:var(--muted);margin-bottom:.6rem">Upload an image to use as the page background. Panel colours will become semi-transparent so the image shows through.</p>
       <div class="btn-row" style="flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem">
-        <label class="btn sm" style="cursor:pointer">📁 Upload Image<input type="file" id="bg-image-upload" accept="image/*" style="display:none" onchange="cmBgImageUpload(this)"></label>
+        <label class="btn sm" style="cursor:pointer">📁 Upload Image<input type="file" id="bg-image-upload" accept="image/*,image/gif" style="display:none" onchange="cmBgImageUpload(this)"></label>
         <button class="btn sm sec" onclick="cmBgImageClear()">✕ Remove Image</button>
       </div>
       <div id="bg-image-preview" style="display:none;margin-bottom:.5rem">
@@ -779,9 +802,13 @@ My Combo Name
         <button class="btn" id="proxyApiBtn" onclick="toggleProxyAPI(!CM_PROXY_API_ENABLED);this.textContent='API Proxy: '+(CM_PROXY_API_ENABLED?'ON':'OFF')">API Proxy: OFF</button>
         <button class="btn" onclick="toggleProxyEverything(!(CM_PROXY_ENABLED&&CM_PROXY_API_ENABLED));document.getElementById('proxyToggleBtn').textContent='Proxy: '+(CM_PROXY_ENABLED?'ON':'OFF');document.getElementById('proxyApiBtn').textContent='API Proxy: '+(CM_PROXY_API_ENABLED?'ON':'OFF')">Proxy All</button>
       </div>
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.4rem">
+        <input id="customProxyInput" class="txt" placeholder="Custom Worker URL (blank = default)" style="flex:1;min-width:180px">
+        <button class="btn" onclick="applyCustomProxy()">Set</button>
+      </div>
       <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">
-        <input id="customProxyInput" class="txt" placeholder="Custom proxy URL (blank = default Worker)" style="flex:1;min-width:180px">
-        <button class="btn" onclick="applyCustomProxy()">Set Proxy</button>
+        <input id="customProxyToken" class="txt" type="password" placeholder="Custom Worker token (if required)" style="flex:1;min-width:180px">
+        <button class="btn" onclick="applyCustomProxy()">Set</button>
       </div>
       <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">
         <label style="font-size:.8rem;color:var(--muted)">API Source:</label>
@@ -1031,6 +1058,7 @@ let S={
     {label:'Master Duel (strict)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname={name}&format=master+duel'},
     {label:'Master Duel (offline)',url:'masterduel://'},
     {label:'YGO Prices (fuzzy) ⚠',url:'https://yugiohprices.com/api/get_card_prices/{name}'},
+    {label:'Local Library (offline)',url:'locallibrary://'},
   ],
   themeIndex:0,customTheme:{},bodyFont:BASE_FONTS[0].css,headFont:BASE_FONTS[0].css,
   cardScale:100,deckScale:60,deckSearchScale:80,editorScale:100,editorSearchScale:100,editorCustomScale:110,cardSearchApiIdx:0,emojiScale:1.6,uiScale:150,
@@ -1046,12 +1074,21 @@ function toast(m,t='ok',d=2800){const e=document.getElementById('toast');e.textC
 let CM_PROXY_ENABLED=false;
 let CM_PROXY_API_ENABLED=false;
 let CM_PROXY_CUSTOM='';
+let CM_PROXY_TOKEN=''; // token for custom worker; default worker uses built-in token
 let useProxy=false;
 let customProxy='';
+const CM_DEFAULT_WORKER='https://cmw.cm-v1.workers.dev/';
+const CM_DEFAULT_TOKEN='df118e891c1d6e6ca03e7a0d8270ba0f';
 
 function cmBuildProxiedUrl(url){
-  const base=CM_PROXY_CUSTOM||customProxy||'https://cmw.cm-v1.workers.dev/?url=';
-  return base+encodeURIComponent(url);
+  if(CM_PROXY_CUSTOM){
+    // Custom worker — append user token if set
+    const base=CM_PROXY_CUSTOM.endsWith('?')||CM_PROXY_CUSTOM.endsWith('&')?CM_PROXY_CUSTOM:CM_PROXY_CUSTOM+'?';
+    const tok=CM_PROXY_TOKEN?`&token=${encodeURIComponent(CM_PROXY_TOKEN)}`:'';
+    return base+`url=${encodeURIComponent(url)}`+tok;
+  }
+  // Default worker — built-in token, locked to whitelist
+  return `${CM_DEFAULT_WORKER}?token=${CM_DEFAULT_TOKEN}&url=${encodeURIComponent(url)}`;
 }
 
 function buildImageUrl(directUrl){
@@ -1059,15 +1096,33 @@ function buildImageUrl(directUrl){
   return cmBuildProxiedUrl(directUrl);
 }
 
-async function cmFetch(url,opts={},{isApi=false,isImage=false}={}){
+async function cmFetch(url,opts={},{isApi=false,isImage=false,retries=3}={}){
   const proxyOn=CM_PROXY_ENABLED||useProxy;
   const shouldProxy=proxyOn&&((isApi&&CM_PROXY_API_ENABLED)||(isImage&&proxyOn));
   const finalUrl=shouldProxy?cmBuildProxiedUrl(url):url;
-  try{
-    const res=await fetch(finalUrl,opts);
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    return res;
-  }catch(e){console.warn('cmFetch failed:',finalUrl,e);return null;}
+  let delay=300;
+  for(let attempt=0;attempt<=retries;attempt++){
+    try{
+      const res=await fetch(finalUrl,opts);
+      if(res.status===429){
+        const retryAfter=(parseInt(res.headers.get('Retry-After')||'1')+1)*1000;
+        const wait=Math.max(300,retryAfter)+Math.random()*150-75;
+        console.warn('cmFetch 429 — backing off',Math.round(wait)+'ms');
+        await new Promise(r=>setTimeout(r,wait));
+        delay=Math.min(delay*2,5000);
+        continue;
+      }
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      return res;
+    }catch(e){
+      if(attempt===retries){console.warn('cmFetch failed:',finalUrl,e);return null;}
+      const jitter=Math.random()*150-75;
+      const wait=delay+jitter;
+      await new Promise(r=>setTimeout(r,wait));
+      delay=Math.min(delay*2,5000);
+    }
+  }
+  return null;
 }
 
 async function cmGetImage(url){
@@ -1103,16 +1158,20 @@ function toggleProxyEverything(on){CM_PROXY_ENABLED=!!on;CM_PROXY_API_ENABLED=!!
 
 function applyCustomProxy(){
   const v=document.getElementById('customProxyInput');
+  const t=document.getElementById('customProxyToken');
   const val=v?v.value.trim():'';
+  const tok=t?t.value.trim():'';
   CM_PROXY_CUSTOM=val;
   customProxy=val;
+  CM_PROXY_TOKEN=tok;
   sv('proxyCustom',val);
+  sv('proxyToken',tok);
   toast(val?'Custom proxy set':'Proxy reset to default','ok');
 }
 
 function sv(k,v){try{localStorage.setItem(SK+k,JSON.stringify(v));}catch(e){console.warn(e);}}
 function ld(k,fb=null){try{const v=localStorage.getItem(SK+k);return v!==null?JSON.parse(v):fb;}catch{return fb;}}
-function saveAll(){sv('combos',S.combos);sv('decklist',S.decklist);sv('savedDecks',S.savedDecks);sv('resources',S.resources);sv('imgSources',S.imgSources);sv('theme',S.themeIndex);sv('customTheme',S.customTheme);sv('bodyFont',S.bodyFont);sv('headFont',S.headFont);sv('cardScale',S.cardScale);sv('deckScale',S.deckScale);sv('deckSearchScale',S.deckSearchScale);sv('editorScale',S.editorScale);sv('editorSearchScale',S.editorSearchScale);sv('editorCustomScale',S.editorCustomScale);sv('cardSearchApiIdx',S.cardSearchApiIdx);sv('emojiScale',S.emojiScale);sv('uiScale',S.uiScale);sv('cardImgScale',S.cardImgScale);sv('iconImgScale',S.iconImgScale);sv('hiddenFonts',S.hiddenFonts);sv('deckSections',S.deckSections);sv('stepNumInline',S.stepNumInline);sv('layoutMode',S.layoutMode);sv('proxyEnabled',CM_PROXY_ENABLED);sv('proxyApiEnabled',CM_PROXY_API_ENABLED);sv('proxyCustom',CM_PROXY_CUSTOM);sv('apiSource',CM_API_SOURCE);}
+function saveAll(){sv('combos',S.combos);sv('decklist',S.decklist);sv('savedDecks',S.savedDecks);sv('resources',S.resources);sv('imgSources',S.imgSources);sv('theme',S.themeIndex);sv('customTheme',S.customTheme);sv('bodyFont',S.bodyFont);sv('headFont',S.headFont);sv('cardScale',S.cardScale);sv('deckScale',S.deckScale);sv('deckSearchScale',S.deckSearchScale);sv('editorScale',S.editorScale);sv('editorSearchScale',S.editorSearchScale);sv('editorCustomScale',S.editorCustomScale);sv('cardSearchApiIdx',S.cardSearchApiIdx);sv('emojiScale',S.emojiScale);sv('uiScale',S.uiScale);sv('cardImgScale',S.cardImgScale);sv('iconImgScale',S.iconImgScale);sv('hiddenFonts',S.hiddenFonts);sv('deckSections',S.deckSections);sv('stepNumInline',S.stepNumInline);sv('layoutMode',S.layoutMode);sv('proxyEnabled',CM_PROXY_ENABLED);sv('proxyApiEnabled',CM_PROXY_API_ENABLED);sv('proxyCustom',CM_PROXY_CUSTOM);sv('proxyToken',CM_PROXY_TOKEN);sv('apiSource',CM_API_SOURCE);}
 function loadAll(){S.combos=ld('combos',{});S.decklist=ld('decklist',[]);S.savedDecks=ld('savedDecks',{});S.resources=ld('resources',[...DEF_RES]);S.imgSources=ld('imgSources',S.imgSources);S.themeIndex=ld('theme',0);S.customTheme=ld('customTheme',{});S.bodyFont=ld('bodyFont',S.bodyFont);S.headFont=ld('headFont',S.headFont);S.cardScale=ld('cardScale',100);S.deckScale=ld('deckScale',60);S.deckSearchScale=ld('deckSearchScale',80);S.editorScale=ld('editorScale',100);S.editorSearchScale=ld('editorSearchScale',100);S.editorCustomScale=ld('editorCustomScale',110);S.cardSearchApiIdx=ld('cardSearchApiIdx',0);S.emojiScale=ld('emojiScale',1.6);S.uiScale=ld('uiScale',150);S.cardImgScale=ld('cardImgScale',75);S.iconImgScale=ld('iconImgScale',56);S.hiddenFonts=ld('hiddenFonts',[]);hiddenFonts=new Set(S.hiddenFonts);S.cardImages=ld('cardImages',{});S.icons=ld('icons',{});S.deckSections=ld('deckSections',null);S.stepNumInline=ld('stepNumInline',false);S.layoutMode=ld('layoutMode','auto');
 // Migrate: if deckSections not set, create from decklist
 if(!S.deckSections){S.deckSections=[{id:'main',name:'Main Deck',cards:[...S.decklist]}];}
@@ -1120,6 +1179,7 @@ if(!S.deckSections){S.deckSections=[{id:'main',name:'Main Deck',cards:[...S.deck
 CM_PROXY_ENABLED=ld('proxyEnabled',false);useProxy=CM_PROXY_ENABLED;
 CM_PROXY_API_ENABLED=ld('proxyApiEnabled',false);
 CM_PROXY_CUSTOM=ld('proxyCustom','');customProxy=CM_PROXY_CUSTOM;
+CM_PROXY_TOKEN=ld('proxyToken','');
 CM_API_SOURCE=ld('apiSource','ygoprodeck');
 }
 function migrate(){for(const[,steps] of Object.entries(S.combos)){steps.forEach(step=>{if(step.handtraps&&!step.interruptions){step.interruptions=step.handtraps.map(h=>typeof h==='object'?h:{text:h,severity:getSev(h)});delete step.handtraps;}if(!step.interruptions)step.interruptions=[];if(!step.cards)step.cards=step.card?[{type:'card',name:step.card,imageUrl:step.imageUrl||''}]:[];});}}
@@ -1277,21 +1337,26 @@ function cmComboInit(inputId, dropId, selectId, onSelect){
   _cmcState[key]={inputId,dropId,selectId,onSelect,kbIdx:-1};
   // Move dropdown to body to escape all stacking contexts
   if(drop.parentElement!==document.body)document.body.appendChild(drop);
-  // Clear button setup
-  const clrBtn=inp.closest('.cm-combo-wrap')?.querySelector('.cm-combo-clear');
+  // Arrow/clear toggle button
+  const arrowBtn=inp.closest('.cm-combo-wrap')?.querySelector('.cm-combo-arrow');
   function syncClear(){
-    if(clrBtn)clrBtn.classList.toggle('visible',inp.value!=='');
+    if(!arrowBtn)return;
+    const hasVal=inp.value!=='';
+    arrowBtn.textContent=hasVal?'✕':'▼';
+    arrowBtn.classList.toggle('is-clear',hasVal);
+    arrowBtn.title=hasVal?'Clear selection':'Open dropdown';
   }
-  if(clrBtn){
-    clrBtn.addEventListener('click',e=>{
+  if(arrowBtn){
+    arrowBtn.addEventListener('click',e=>{
       e.stopPropagation();
-      inp.value='';
-      sel.value='';
-      syncClear();
-      close();
-      cmComboRender(key,'');
-      drop.classList.add('open');
-      onSelect&&onSelect('');
+      if(arrowBtn.classList.contains('is-clear')){
+        inp.value='';sel.value='';syncClear();close();
+        cmComboRender(key,'');drop.classList.add('open');
+        positionDrop();onSelect&&onSelect('');
+      } else {
+        if(drop.classList.contains('open')){close();}
+        else{open();}
+      }
     });
   }
   // Sync input display from hidden select's current value
@@ -1338,8 +1403,8 @@ function cmComboRender(key,filter){
       const val=el.dataset.value;
       sel.value=val;
       inp.value=val?el.textContent:'';
-      const clrBtn=inp.closest('.cm-combo-wrap')?.querySelector('.cm-combo-clear');
-      if(clrBtn)clrBtn.classList.toggle('visible',inp.value!=='');
+      const arrowBtn2=inp.closest('.cm-combo-wrap')?.querySelector('.cm-combo-arrow');
+      if(arrowBtn2){const hv=inp.value!=='';arrowBtn2.textContent=hv?'✕':'▼';arrowBtn2.classList.toggle('is-clear',hv);}
       drop.classList.remove('open');
       st.onSelect&&st.onSelect(val);
     });
@@ -1361,8 +1426,8 @@ function cmComboSetValue(inputId,val){
   sel.value=val;
   const opt=[...sel.options].find(o=>o.value===val);
   inp.value=val?(opt?.text||val):'';
-  const clrBtn=inp.closest('.cm-combo-wrap')?.querySelector('.cm-combo-clear');
-  if(clrBtn)clrBtn.classList.toggle('visible',inp.value!=='');
+  const arrowBtn3=inp.closest('.cm-combo-wrap')?.querySelector('.cm-combo-arrow');
+  if(arrowBtn3){const hv=inp.value!=='';arrowBtn3.textContent=hv?'✕':'▼';arrowBtn3.classList.toggle('is-clear',hv);}
 }
 
 // ── Follow-up picker modal ──
@@ -1950,6 +2015,12 @@ async function cmSearch(q,apiIdx){
     return [];
   }
 
+  if(url==='locallibrary://'){
+    const r=cmLocalLibSearch(q);
+    if(!r.length)toast('No results in Local Library. Upload a card folder in the Images tab.','warn',3000);
+    return r;
+  }
+
   // Unknown/custom URL — substitute {name} and call directly
   try{
     const reqUrl=url.includes('{name}')?url.replace(/\{name\}/g,encodeURIComponent(q)):url+encodeURIComponent(q);
@@ -1995,11 +2066,9 @@ async function cmCacheAllCards(){
   toast(`Fetching ${total} card image${total!==1?'s':''}… this may take a moment`,'ok',6000);
 
   // Image downloads ALWAYS need a proxy — images.ygoprodeck.com has no CORS headers
-  // Use the configured worker regardless of proxy toggle state
   function proxied(url){
     if(!url||url.startsWith('data:'))return url;
-    const base=CM_PROXY_CUSTOM||customProxy||'https://cmw.cm-v1.workers.dev/?url=';
-    return base+encodeURIComponent(url);
+    return cmBuildProxiedUrl(url);
   }
 
   // Fetch image bytes via proxy, return Uint8Array or null
@@ -2131,6 +2200,7 @@ function addCardFromSearch(el){try{addCardToSeq(JSON.parse(el.dataset.card.repla
 function addFromDeckSearch(el){try{const d=JSON.parse(el.dataset.card.replace(/&quot;/g,'"'));addCardNameToDeck(d.name,1,d.imageUrl);}catch(e){console.error(e);}}
 function renderCustomCardGrid(){
   const grid=document.getElementById('custom-card-grid');
+  const srch=document.getElementById('custom-card-search');if(srch)srch.value='';
   const entries=Object.entries(S.cardImages);
   if(!entries.length){grid.innerHTML='<div class="empty-msg" style="grid-column:1/-1">Upload images in Images tab.</div>';return;}
   // Set both height AND proportional column min-width (YGO card ~0.72 aspect ratio)
@@ -2140,6 +2210,22 @@ function renderCustomCardGrid(){
   grid.style.setProperty('--cg-max',Math.round(h*0.78)+'px');
   grid.innerHTML=entries.map(([name,src])=>`<div class="card-thumb" draggable="true" onclick='addCardToSeq(${JSON.stringify({name,imageUrl:src}).replace(/'/g,"&#39;")})' title="Click to add"><img src="${src}" alt="${esc(name)}"><div class="ct-name">${esc(name)}</div><div class="ct-plus">+</div></div>`).join('');
   grid.querySelectorAll('.card-thumb').forEach(el=>el.addEventListener('dragstart',e=>{_dragType='card';const name=el.querySelector('.ct-name').textContent;const src=el.querySelector('img').src;e.dataTransfer.setData('cardData',JSON.stringify({name,imageUrl:src}));e.dataTransfer.effectAllowed='copy';}));
+}
+function cmFilterCustomCards(q){
+  const grid=document.getElementById('custom-card-grid');
+  if(!grid)return;
+  const ql=q.toLowerCase().trim();
+  grid.querySelectorAll('.card-thumb').forEach(el=>{
+    const name=el.querySelector('.ct-name')?.textContent||'';
+    el.style.display=(!ql||name.toLowerCase().includes(ql))?'':'none';
+  });
+  // Show empty message if nothing visible
+  const visible=[...grid.querySelectorAll('.card-thumb')].filter(el=>el.style.display!=='none');
+  let msg=grid.querySelector('.filter-empty-msg');
+  if(!visible.length&&ql){
+    if(!msg){msg=document.createElement('div');msg.className='empty-msg filter-empty-msg';msg.style.gridColumn='1/-1';grid.appendChild(msg);}
+    msg.textContent=`No custom cards matching "${q}"`;
+  } else if(msg){msg.remove();}
 }
 function renderIconGridEditor(){
   const grid=document.getElementById('icon-grid-editor');
@@ -2410,12 +2496,12 @@ function handleFontUpload(file){if(!file)return;const r=new FileReader();r.onloa
 function renderImgSources(){document.getElementById('img-sources-list').innerHTML=S.imgSources.map((s,i)=>`<div style="display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-size:.78rem;font-weight:600">${esc(s.label)}</div><code style="font-size:.7rem;word-break:break-all;display:block;margin-top:2px;overflow-wrap:anywhere">${esc(s.url)}</code></div><button class="btn xs danger" onclick="removeImgSource(${i})">✕</button></div>`).join('');}
 function addImgSource(){const label=document.getElementById('src-label').value.trim();const url=document.getElementById('src-url').value.trim();if(!label||!url)return toast('Enter label and URL','warn');S.imgSources.push({label,url});sv('imgSources',S.imgSources);renderImgSources();document.getElementById('src-label').value='';document.getElementById('src-url').value='';}
 function removeImgSource(idx){S.imgSources.splice(idx,1);sv('imgSources',S.imgSources);renderImgSources();}
-function resetAllData(){if(!confirm('Delete ALL Combo Master data?\n\nBrowser history and other sites: NOT affected.'))return;Object.keys(localStorage).filter(k=>k.startsWith(SK)||k.startsWith('cardImage_')).forEach(k=>localStorage.removeItem(k));['bgImageData','bgSize','bgCustomSize','panelBlur','proxyEnabled','proxyApiEnabled','proxyCustom','apiSource'].forEach(k=>localStorage.removeItem(k));localStorage.removeItem(CM_CARD_CACHE_KEY);CM_CARD_CACHE={};CM_MD_DB=[];CM_PROXY_ENABLED=false;CM_PROXY_API_ENABLED=false;CM_PROXY_CUSTOM='';useProxy=false;customProxy='';CM_API_SOURCE='ygoprodeck';CM_BG_IMAGE_DATA='';document.documentElement.style.removeProperty('--bg-image');document.documentElement.style.removeProperty('--panel-blur');FONTS=[...BASE_FONTS];hiddenFonts=new Set();S={combos:{},decklist:[],savedDecks:{},resources:[...DEF_RES],cardImages:{},icons:{},imgSources:[{label:'YGOPRODeck (fuzzy)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname={name}'},{label:'YGOPRODeck (exact)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?name={name}'},{label:'Master Duel (strict)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname={name}&format=master+duel'},{label:'Master Duel (offline)',url:'masterduel://'},{label:'YGO Prices (fuzzy)',url:'https://yugiohprices.com/api/get_card_prices/{name}'}],themeIndex:0,customTheme:{},bodyFont:BASE_FONTS[0].css,headFont:BASE_FONTS[0].css,cardScale:100,deckScale:60,deckSearchScale:80,editorScale:100,editorSearchScale:100,editorCustomScale:110,cardSearchApiIdx:0,emojiScale:1.6,uiScale:150,cardImgScale:75,iconImgScale:56,hiddenFonts:[],currentCombo:'',currentStep:0,viewMode:'step',deckViewMode:'list',editorMode:'flow',sesStep:0,deckSections:[{id:'main',name:'Main Deck',cards:[]}]};activeSectionIdx=0;seqSteps=[];stopCycle();applyTheme(0);applyFonts();applyUIScale(150);['ui-scale-slider','ui-scale-lbl'].forEach((id,j)=>{const el=document.getElementById(id);if(el)el[j?'textContent':'value']=j?'150%':'150';});renderViewerSelect();renderEditorSelect();renderSeqSteps();renderSES();renderDeckUI();renderImagesGrid();renderIconsGrid();renderEmojiCatBar();renderResources();renderImgSources();renderApiPopup();renderThemeSwatches();renderColorGrid();renderFontGrids();loadComboForView('');document.getElementById('viewer-select').value='';cmComboSetValue('viewer-combo-input','');cmComboSetValue('editor-combo-input','');const pb=document.getElementById('proxyToggleBtn');if(pb)pb.textContent='Proxy: OFF';const ab=document.getElementById('proxyApiBtn');if(ab)ab.textContent='API Proxy: OFF';const ci=document.getElementById('customProxyInput');if(ci)ci.value='';const as=document.getElementById('apiSourceSelect');if(as)as.value='ygoprodeck';
+function resetAllData(){if(!confirm('Delete ALL Combo Master data?\n\nBrowser history and other sites: NOT affected.'))return;Object.keys(localStorage).filter(k=>k.startsWith(SK)||k.startsWith('cardImage_')).forEach(k=>localStorage.removeItem(k));['bgImageData','bgSize','bgCustomSize','panelBlur','proxyEnabled','proxyApiEnabled','proxyCustom','proxyToken','apiSource'].forEach(k=>localStorage.removeItem(k));localStorage.removeItem(CM_CARD_CACHE_KEY);CM_CARD_CACHE={};CM_MD_DB=[];CM_PROXY_ENABLED=false;CM_PROXY_API_ENABLED=false;CM_PROXY_CUSTOM='';useProxy=false;customProxy='';CM_API_SOURCE='ygoprodeck';CM_BG_IMAGE_DATA='';document.documentElement.style.removeProperty('--bg-image');document.documentElement.style.removeProperty('--panel-blur');FONTS=[...BASE_FONTS];hiddenFonts=new Set();S={combos:{},decklist:[],savedDecks:{},resources:[...DEF_RES],cardImages:{},icons:{},imgSources:[{label:'YGOPRODeck (fuzzy)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname={name}'},{label:'YGOPRODeck (exact)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?name={name}'},{label:'Master Duel (strict)',url:'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname={name}&format=master+duel'},{label:'Master Duel (offline)',url:'masterduel://'},{label:'YGO Prices (fuzzy)',url:'https://yugiohprices.com/api/get_card_prices/{name}'},{label:'Local Library (offline)',url:'locallibrary://'}],themeIndex:0,customTheme:{},bodyFont:BASE_FONTS[0].css,headFont:BASE_FONTS[0].css,cardScale:100,deckScale:60,deckSearchScale:80,editorScale:100,editorSearchScale:100,editorCustomScale:110,cardSearchApiIdx:0,emojiScale:1.6,uiScale:150,cardImgScale:75,iconImgScale:56,hiddenFonts:[],currentCombo:'',currentStep:0,viewMode:'step',deckViewMode:'list',editorMode:'flow',sesStep:0,deckSections:[{id:'main',name:'Main Deck',cards:[]}]};activeSectionIdx=0;seqSteps=[];stopCycle();applyTheme(0);applyFonts();applyUIScale(150);['ui-scale-slider','ui-scale-lbl'].forEach((id,j)=>{const el=document.getElementById(id);if(el)el[j?'textContent':'value']=j?'150%':'150';});renderViewerSelect();renderEditorSelect();renderSeqSteps();renderSES();renderDeckUI();renderImagesGrid();renderIconsGrid();renderEmojiCatBar();renderResources();renderImgSources();renderApiPopup();renderThemeSwatches();renderColorGrid();renderFontGrids();loadComboForView('');document.getElementById('viewer-select').value='';cmComboSetValue('viewer-combo-input','');cmComboSetValue('editor-combo-input','');const pb=document.getElementById('proxyToggleBtn');if(pb)pb.textContent='Proxy: OFF';const ab=document.getElementById('proxyApiBtn');if(ab)ab.textContent='API Proxy: OFF';const ci=document.getElementById('customProxyInput');if(ci)ci.value='';const ct=document.getElementById('customProxyToken');if(ct)ct.value='';CM_PROXY_TOKEN='';const as=document.getElementById('apiSourceSelect');if(as)as.value='ygoprodeck';
 const bgp=document.getElementById('bg-image-preview');if(bgp)bgp.style.display='none';
 const bsl=document.getElementById('panel-blur-slider');if(bsl)bsl.value=0;
 const bll=document.getElementById('panel-blur-lbl');if(bll)bll.textContent='0px';
 const bss=document.getElementById('bg-size-select');if(bss)bss.value='cover';
-toast('All data reset','ok');}
+cmLocalLibDBClear();CM_LOCAL_LIB={};cmLocalLibUpdateCount();toast('All data reset','ok');}
 
 // ══ PRINT ══
 function printCombo(mode){
@@ -2524,9 +2610,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(ab)ab.textContent='API Proxy: '+(CM_PROXY_API_ENABLED?'ON':'OFF');
     const ci=document.getElementById('customProxyInput');
     if(ci)ci.value=CM_PROXY_CUSTOM||'';
+    const ct=document.getElementById('customProxyToken');
+    if(ct)ct.value=CM_PROXY_TOKEN||'';
     const as=document.getElementById('apiSourceSelect');
     if(as)as.value=CM_API_SOURCE||'ygoprodeck';
     cmBgRestoreFromStorage();
+  cmLocalLibRestore();
   })();
   migrate();
   cmLoadCardCache(); // restore search result cache from localStorage
@@ -2924,7 +3013,18 @@ function cmBgImageUpload(input){
   const reader=new FileReader();
   reader.onload=e=>{
     const raw=e.target.result;
-    // Compress via canvas to avoid localStorage lockup on large images
+    // GIF: skip canvas (would lose animation), store directly
+    if(file.type==='image/gif'){
+      CM_BG_IMAGE_DATA=raw;
+      cmBgImageApply();
+      const prev=document.getElementById('bg-image-preview');
+      const pimg=document.getElementById('bg-preview-img');
+      if(prev&&pimg){pimg.src=raw;prev.style.display='block';}
+      try{sv('bgImageData',raw);}catch{toast('GIF loaded (too large to persist — session only)','warn',5000);}
+      cmBgTransparencyPrompt();
+      return;
+    }
+    // Other formats: compress via canvas
     const img=new Image();
     img.onload=()=>{
       const MAX=1920;
@@ -2940,7 +3040,6 @@ function cmBgImageUpload(input){
       const pimg=document.getElementById('bg-preview-img');
       if(prev&&pimg){pimg.src=compressed;prev.style.display='block';}
       try{sv('bgImageData',compressed);}catch(err){
-        // If still too large for localStorage, store without saving (session only)
         console.warn('BG image too large for localStorage — session only',err);
         toast('Image loaded (too large to persist across sessions)','warn',5000);
       }
@@ -3065,6 +3164,150 @@ function cmBgRestoreFromStorage(){
   const sl=document.getElementById('panel-blur-slider');
   if(sl)sl.value=blurVal;
   if(blurVal>0)cmPanelBlurChange(blurVal);
+}
+
+// ══════════════════════════════════════════════════════════
+// LOCAL CARD LIBRARY
+// ══════════════════════════════════════════════════════════
+let CM_LOCAL_LIB = {}; // id/name → dataURL
+
+function cmLocalLibUpdateCount(){
+  const n=Object.keys(CM_LOCAL_LIB).length;
+  const el=document.getElementById('local-lib-count');
+  if(el)el.textContent=n?`(${n} cards mapped)`:'';
+}
+
+async function cmLocalLibLoad(input){
+  const files=Array.from(input.files).filter(f=>f.type.startsWith('image/'));
+  if(!files.length)return;
+
+  // Ensure MD DB is loaded for ID→name mapping
+  if(!CM_MD_DB.length){
+    document.getElementById('local-lib-status').textContent='Loading card database for mapping…';
+    document.getElementById('local-lib-progress').style.display='block';
+    await cmLoadMasterDuelDB();
+  }
+
+  // Build lookup: numeric ID (filename without ext) → en_name
+  const idToName={};
+  for(const card of CM_MD_DB){
+    const name=card.en_name||card.name?.en||'';
+    if(!name)continue;
+    if(card.password)idToName[String(card.password)]=name;
+    if(card.konami_id)idToName[String(card.konami_id)]=name;
+    if(card.yugipedia_page_id)idToName[String(card.yugipedia_page_id)]=name;
+  }
+
+  const prog=document.getElementById('local-lib-progress');
+  const bar=document.getElementById('local-lib-bar');
+  const status=document.getElementById('local-lib-status');
+  prog.style.display='block';
+
+  let mapped=0, skipped=0, done=0;
+  const total=files.length;
+
+  // Process in batches to avoid blocking UI
+  const BATCH=50;
+  for(let i=0;i<total;i+=BATCH){
+    const batch=files.slice(i,i+BATCH);
+    await Promise.all(batch.map(file=>new Promise(resolve=>{
+      const stem=file.name.replace(/\.[^/.]+$/,'').trim();
+      const cardName=idToName[stem]||null;
+      if(!cardName){skipped++;done++;resolve();return;}
+      const r=new FileReader();
+      r.onload=e=>{
+        CM_LOCAL_LIB[cardName]=e.target.result;
+        // Also write to card cache for instant retrieval
+        cmSetCached(cardName,{name:cardName,img:e.target.result});
+        mapped++;done++;resolve();
+      };
+      r.onerror=()=>{skipped++;done++;resolve();};
+      r.readAsDataURL(file);
+    })));
+    const pct=Math.round((done/total)*100);
+    bar.style.width=pct+'%';
+    status.textContent=`Mapped ${mapped} of ${done} processed (${total-done} remaining)…`;
+    await new Promise(r=>setTimeout(r,0)); // yield to UI
+  }
+
+  status.textContent=`✅ Done — ${mapped} cards mapped, ${skipped} unrecognised.`;
+  cmLocalLibUpdateCount();
+
+  const summary=document.getElementById('local-lib-summary');
+  if(summary){
+    summary.style.display='block';
+    summary.textContent=`${mapped} cards ready · ${skipped} files skipped (unrecognised IDs) · select "Local Library (offline)" as your API source to use them.`;
+  }
+
+  // Persist to IndexedDB for next session
+  cmLocalLibSave();
+  input.value='';
+}
+
+function cmLocalLibClear(){
+  if(!confirm('Clear the local card library?'))return;
+  CM_LOCAL_LIB={};
+  cmLocalLibUpdateCount();
+  const prog=document.getElementById('local-lib-progress');
+  if(prog)prog.style.display='none';
+  const summary=document.getElementById('local-lib-summary');
+  if(summary)summary.style.display='none';
+  cmLocalLibDBClear();
+  toast('Local library cleared','ok');
+}
+
+// ── IndexedDB persistence ──
+function cmLocalLibDB(mode){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open('cm_local_lib',1);
+    req.onupgradeneeded=e=>e.target.result.createObjectStore('cards',{keyPath:'name'});
+    req.onsuccess=e=>res(e.target.result.transaction('cards',mode).objectStore('cards'));
+    req.onerror=()=>rej(req.error);
+  });
+}
+
+async function cmLocalLibSave(){
+  try{
+    const store=await cmLocalLibDB('readwrite');
+    for(const [name,img] of Object.entries(CM_LOCAL_LIB)){
+      store.put({name,img});
+    }
+    toast('Local library saved to browser storage','ok',2500);
+  }catch(e){console.warn('Local lib IDB save failed:',e);}
+}
+
+async function cmLocalLibRestore(){
+  try{
+    const store=await cmLocalLibDB('readonly');
+    const req=store.getAll();
+    req.onsuccess=()=>{
+      for(const {name,img} of req.result){
+        CM_LOCAL_LIB[name]=img;
+        cmSetCached(name,{name,img});
+      }
+      cmLocalLibUpdateCount();
+      if(Object.keys(CM_LOCAL_LIB).length){
+        const s=document.getElementById('local-lib-summary');
+        if(s){s.style.display='block';s.textContent=`${Object.keys(CM_LOCAL_LIB).length} cards loaded from saved library.`;}
+      }
+    };
+  }catch(e){console.warn('Local lib IDB restore failed:',e);}
+}
+
+async function cmLocalLibDBClear(){
+  try{
+    const store=await cmLocalLibDB('readwrite');
+    store.clear();
+  }catch(e){console.warn('Local lib IDB clear failed:',e);}
+}
+
+// ── cmSearch integration ──
+function cmLocalLibSearch(q){
+  const ql=q.toLowerCase();
+  return Object.entries(CM_LOCAL_LIB)
+    .filter(([name])=>name.toLowerCase().includes(ql))
+    .slice(0,20)
+    .map(([name,img])=>({name,img}));
 }
 </script>
 </body>
