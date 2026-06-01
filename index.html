@@ -2016,8 +2016,8 @@ async function cmSearch(q,apiIdx){
   }
 
   if(url==='locallibrary://'){
-    const r=cmLocalLibSearch(q);
-    if(!r.length)toast('No results in Local Library. Upload a card folder in the Images tab.','warn',3000);
+    const r=await cmLocalLibSearch(q);
+    if(!r.length)toast('No results in Local Library — card names are resolved via search history. Try searching with another source first, then switch to Local Library.','warn',5000);
     return r;
   }
 
@@ -3169,33 +3169,48 @@ function cmBgRestoreFromStorage(){
 // ══════════════════════════════════════════════════════════
 // LOCAL CARD LIBRARY
 // ══════════════════════════════════════════════════════════
-let CM_LOCAL_LIB = {}; // id/name → dataURL
+// CM_LOCAL_LIB stores: passwordId (string) → dataURL
+// CM_LOCAL_LIB_NAMES stores: passwordId → resolved card name (populated lazily)
+let CM_LOCAL_LIB = {};
+let CM_LOCAL_LIB_NAMES = {}; // id → name, built from card cache + YGO lookups
 
 function cmLocalLibUpdateCount(){
   const n=Object.keys(CM_LOCAL_LIB).length;
   const el=document.getElementById('local-lib-count');
-  if(el)el.textContent=n?`(${n} cards mapped)`:'';
+  if(el)el.textContent=n?`(${n} images loaded — names resolve on search)`:'';
 }
 
 async function cmLocalLibLoad(input){
-  const files=Array.from(input.files).filter(f=>f.type.startsWith('image/'));
-  if(!files.length)return;
+  const allFiles=Array.from(input.files);
 
-  // Ensure MD DB is loaded for ID→name mapping
-  if(!CM_MD_DB.length){
-    document.getElementById('local-lib-status').textContent='Loading card database for mapping…';
-    document.getElementById('local-lib-progress').style.display='block';
-    await cmLoadMasterDuelDB();
+  // Check for cm-card-index.json in the uploaded folder
+  const indexFile=allFiles.find(f=>f.name==='cm-card-index.json');
+  if(indexFile){
+    const prog=document.getElementById('local-lib-progress');
+    const bar=document.getElementById('local-lib-bar');
+    const status=document.getElementById('local-lib-status');
+    prog.style.display='block';
+    status.textContent='Reading card index file…';
+    try{
+      const txt=await indexFile.text();
+      const idx=JSON.parse(txt);
+      // idx is {passwordId: cardName}
+      const entries=Object.entries(idx);
+      // Pre-populate CM_LOCAL_LIB_NAMES from index
+      for(const [id,name] of entries) CM_LOCAL_LIB_NAMES[id]=name;
+      status.textContent=`✅ Index loaded — ${entries.length} card names mapped from cm-card-index.json`;
+      bar.style.width='30%';
+      toast(`Card index loaded: ${entries.length} names ready`,'ok',3000);
+    }catch(e){
+      console.warn('cm-card-index.json parse failed:',e);
+      toast('cm-card-index.json found but failed to parse — falling back to lazy resolution','warn',4000);
+    }
   }
 
-  // Build lookup: numeric ID (filename without ext) → en_name
-  const idToName={};
-  for(const card of CM_MD_DB){
-    const name=card.en_name||card.name?.en||'';
-    if(!name)continue;
-    if(card.password)idToName[String(card.password)]=name;
-    if(card.konami_id)idToName[String(card.konami_id)]=name;
-    if(card.yugipedia_page_id)idToName[String(card.yugipedia_page_id)]=name;
+  const files=allFiles.filter(f=>f.type.startsWith('image/'));
+  if(!files.length){
+    if(indexFile)cmLocalLibSave();
+    return;
   }
 
   const prog=document.getElementById('local-lib-progress');
@@ -3203,50 +3218,78 @@ async function cmLocalLibLoad(input){
   const status=document.getElementById('local-lib-status');
   prog.style.display='block';
 
-  let mapped=0, skipped=0, done=0;
+  let loaded=0, done=0;
   const total=files.length;
 
-  // Process in batches to avoid blocking UI
-  const BATCH=50;
+  // Store every image by its filename stem (the YGOPRODeck password ID)
+  const BATCH=100;
   for(let i=0;i<total;i+=BATCH){
     const batch=files.slice(i,i+BATCH);
     await Promise.all(batch.map(file=>new Promise(resolve=>{
       const stem=file.name.replace(/\.[^/.]+$/,'').trim();
-      const cardName=idToName[stem]||null;
-      if(!cardName){skipped++;done++;resolve();return;}
+      if(!stem){done++;resolve();return;}
       const r=new FileReader();
       r.onload=e=>{
-        CM_LOCAL_LIB[cardName]=e.target.result;
-        // Also write to card cache for instant retrieval
-        cmSetCached(cardName,{name:cardName,img:e.target.result});
-        mapped++;done++;resolve();
+        CM_LOCAL_LIB[stem]=e.target.result;
+        loaded++;done++;resolve();
       };
-      r.onerror=()=>{skipped++;done++;resolve();};
+      r.onerror=()=>{done++;resolve();};
       r.readAsDataURL(file);
     })));
     const pct=Math.round((done/total)*100);
     bar.style.width=pct+'%';
-    status.textContent=`Mapped ${mapped} of ${done} processed (${total-done} remaining)…`;
-    await new Promise(r=>setTimeout(r,0)); // yield to UI
+    status.textContent=`Loaded ${loaded} of ${done} processed (${total-done} remaining)…`;
+    await new Promise(r=>setTimeout(r,0));
   }
 
-  status.textContent=`✅ Done — ${mapped} cards mapped, ${skipped} unrecognised.`;
+  // Seed name map from existing card cache
+  cmLocalLibSeedNamesFromCache();
+
+  const hasIndex=Object.keys(CM_LOCAL_LIB_NAMES).length>0;
+  const mapped=Object.keys(CM_LOCAL_LIB).filter(id=>CM_LOCAL_LIB_NAMES[id]).length;
+  status.textContent=`✅ Done — ${loaded} images loaded. ${hasIndex?mapped+' names matched from index.':'Names resolve automatically as you search.'}`;
   cmLocalLibUpdateCount();
 
   const summary=document.getElementById('local-lib-summary');
   if(summary){
     summary.style.display='block';
-    summary.textContent=`${mapped} cards ready · ${skipped} files skipped (unrecognised IDs) · select "Local Library (offline)" as your API source to use them.`;
+    summary.textContent=hasIndex
+      ?`${loaded} images · ${mapped} names matched from cm-card-index.json · ready to search offline.`
+      :`${loaded} images ready. Place cm-card-index.json in your image folder for instant name matching, or names resolve as you search.`;
   }
 
-  // Persist to IndexedDB for next session
   cmLocalLibSave();
   input.value='';
+}
+
+// Seed CM_LOCAL_LIB_NAMES from card cache + pre-loaded index
+function cmLocalLibSeedNamesFromCache(){
+  // 1. Apply any pre-loaded index names to card cache (so searches find local images)
+  for(const [id,name] of Object.entries(CM_LOCAL_LIB_NAMES)){
+    if(CM_LOCAL_LIB[id]&&name){
+      cmSetCached(name,{name,img:CM_LOCAL_LIB[id]});
+    }
+  }
+  // 2. Seed from card cache (cards previously searched via YGOPRODeck have password in img URL)
+  try{
+    const raw=localStorage.getItem(CM_CARD_CACHE_KEY);
+    if(!raw)return;
+    const cache=JSON.parse(raw);
+    for(const [name,data] of Object.entries(cache)){
+      const img=data?.img||'';
+      const m=img.match(/\/([0-9]+)\.jpg/);
+      if(m&&CM_LOCAL_LIB[m[1]]&&!CM_LOCAL_LIB_NAMES[m[1]]){
+        CM_LOCAL_LIB_NAMES[m[1]]=name;
+        cmSetCached(name,{name,img:CM_LOCAL_LIB[m[1]]});
+      }
+    }
+  }catch(e){}
 }
 
 function cmLocalLibClear(){
   if(!confirm('Clear the local card library?'))return;
   CM_LOCAL_LIB={};
+  CM_LOCAL_LIB_NAMES={};
   cmLocalLibUpdateCount();
   const prog=document.getElementById('local-lib-progress');
   if(prog)prog.style.display='none';
@@ -3269,8 +3312,12 @@ function cmLocalLibDB(mode){
 async function cmLocalLibSave(){
   try{
     const store=await cmLocalLibDB('readwrite');
-    for(const [name,img] of Object.entries(CM_LOCAL_LIB)){
-      store.put({name,img});
+    for(const [id,img] of Object.entries(CM_LOCAL_LIB)){
+      store.put({name:id,img});
+    }
+    // Save name map as special entry
+    if(Object.keys(CM_LOCAL_LIB_NAMES).length){
+      store.put({name:'__names__',img:JSON.stringify(CM_LOCAL_LIB_NAMES)});
     }
     toast('Local library saved to browser storage','ok',2500);
   }catch(e){console.warn('Local lib IDB save failed:',e);}
@@ -3282,13 +3329,17 @@ async function cmLocalLibRestore(){
     const req=store.getAll();
     req.onsuccess=()=>{
       for(const {name,img} of req.result){
-        CM_LOCAL_LIB[name]=img;
-        cmSetCached(name,{name,img});
+        if(name==='__names__'){
+          try{const n=JSON.parse(img);Object.assign(CM_LOCAL_LIB_NAMES,n);}catch{}
+        } else {
+          CM_LOCAL_LIB[name]=img;
+        }
       }
+      cmLocalLibSeedNamesFromCache();
       cmLocalLibUpdateCount();
       if(Object.keys(CM_LOCAL_LIB).length){
         const s=document.getElementById('local-lib-summary');
-        if(s){s.style.display='block';s.textContent=`${Object.keys(CM_LOCAL_LIB).length} cards loaded from saved library.`;}
+        if(s){s.style.display='block';s.textContent=`${Object.keys(CM_LOCAL_LIB).length} images in local library · names resolve on search.`;}
       }
     };
   }catch(e){console.warn('Local lib IDB restore failed:',e);}
@@ -3302,12 +3353,45 @@ async function cmLocalLibDBClear(){
 }
 
 // ── cmSearch integration ──
-function cmLocalLibSearch(q){
+// Search: 1) check name map for already-resolved IDs
+//          2) check card cache for password from prior YGO searches
+//          3) async enrich: fetch from YGOPRODeck, map password→name, update cache
+async function cmLocalLibSearch(q){
+  if(!Object.keys(CM_LOCAL_LIB).length)return[];
   const ql=q.toLowerCase();
-  return Object.entries(CM_LOCAL_LIB)
-    .filter(([name])=>name.toLowerCase().includes(ql))
-    .slice(0,20)
-    .map(([name,img])=>({name,img}));
+
+  // Reseed names from cache each search (new searches may have populated it)
+  cmLocalLibSeedNamesFromCache();
+
+  // Build results from already-resolved names
+  const results=[];
+  for(const [id,name] of Object.entries(CM_LOCAL_LIB_NAMES)){
+    if(name.toLowerCase().includes(ql)&&CM_LOCAL_LIB[id]){
+      results.push({name,img:CM_LOCAL_LIB[id]});
+      if(results.length>=20)break;
+    }
+  }
+  if(results.length)return results;
+
+  // No resolved names match — try YGOPRODeck fuzzy to find password→name mapping
+  // This populates the cache so next search is instant
+  try{
+    const cards=await cmYgoproFuzzy(q);
+    if(cards?.length){
+      const out=[];
+      for(const card of cards.slice(0,20)){
+        const m=card.img?.match(/\/([0-9]+)\.jpg/);
+        if(m&&CM_LOCAL_LIB[m[1]]){
+          CM_LOCAL_LIB_NAMES[m[1]]=card.name;
+          cmSetCached(card.name,{name:card.name,img:CM_LOCAL_LIB[m[1]]});
+          out.push({name:card.name,img:CM_LOCAL_LIB[m[1]]});
+        }
+      }
+      if(out.length){cmLocalLibSave();return out;}
+    }
+  }catch(e){}
+
+  return [];
 }
 </script>
 </body>
