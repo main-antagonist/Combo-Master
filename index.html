@@ -3183,8 +3183,13 @@ function cmLocalLibUpdateCount(){
 async function cmLocalLibLoad(input){
   const allFiles=Array.from(input.files);
 
-  // Check for cm-card-index.json in the uploaded folder
-  const indexFile=allFiles.find(f=>f.name==='cm-card-index.json');
+  // Check for cm-card-index.json OR cm-card-data.json in the uploaded folder
+  // Accepts three formats produced by the API Image Downloader export tool:
+  //   1. Flat object:         { "46986414": "Dark Magician", ... }
+  //   2. Array (single val):  [{ "id": "46986414", "name": "Dark Magician" }, ...]
+  //   3. Array (multi-field): [{ "id": "46986414", "name": "Dark Magician", "konami_id": "...", ... }, ...]
+  //      → for multi-field arrays, first string field after "id" is used as the name
+  const indexFile=allFiles.find(f=>f.name==='cm-card-index.json'||f.name==='cm-card-data.json');
   if(indexFile){
     const prog=document.getElementById('local-lib-progress');
     const bar=document.getElementById('local-lib-bar');
@@ -3193,17 +3198,36 @@ async function cmLocalLibLoad(input){
     status.textContent='Reading card index file…';
     try{
       const txt=await indexFile.text();
-      const idx=JSON.parse(txt);
-      // idx is {passwordId: cardName}
-      const entries=Object.entries(idx);
-      // Pre-populate CM_LOCAL_LIB_NAMES from index
-      for(const [id,name] of entries) CM_LOCAL_LIB_NAMES[id]=name;
-      status.textContent=`✅ Index loaded — ${entries.length} card names mapped from cm-card-index.json`;
+      const parsed=JSON.parse(txt);
+      let mapped=0;
+
+      if(Array.isArray(parsed)){
+        // Array format — detect key/value fields from first item
+        const sample=parsed[0]||{};
+        // Key field: prefer "id", fallback to first numeric-looking key
+        const keyField=('id' in sample)?'id':Object.keys(sample).find(k=>!isNaN(sample[k]))||Object.keys(sample)[0];
+        // Name field: prefer "name", fallback to first string field that isn't the key
+        const nameField=('name' in sample)?'name':Object.keys(sample).find(k=>k!==keyField&&typeof sample[k]==='string')||'name';
+        for(const item of parsed){
+          const id=String(item[keyField]||'').trim();
+          const name=String(item[nameField]||'').trim();
+          if(id&&name){CM_LOCAL_LIB_NAMES[id]=name;mapped++;}
+        }
+      } else if(parsed&&typeof parsed==='object'){
+        // Flat object format: { "46986414": "Dark Magician" }
+        for(const [id,name] of Object.entries(parsed)){
+          if(id&&name){CM_LOCAL_LIB_NAMES[id]=String(name);mapped++;}
+        }
+      } else {
+        throw new Error('Unrecognised format — expected object or array');
+      }
+
+      status.textContent=`✅ Index loaded — ${mapped} card names mapped from ${indexFile.name}`;
       bar.style.width='30%';
-      toast(`Card index loaded: ${entries.length} names ready`,'ok',3000);
+      toast(`Card index loaded: ${mapped} names ready`,'ok',3000);
     }catch(e){
-      console.warn('cm-card-index.json parse failed:',e);
-      toast('cm-card-index.json found but failed to parse — falling back to lazy resolution','warn',4000);
+      console.warn(indexFile.name+' parse failed:',e);
+      toast(indexFile.name+' found but failed to parse — falling back to lazy resolution','warn',4000);
     }
   }
 
@@ -3254,8 +3278,8 @@ async function cmLocalLibLoad(input){
   if(summary){
     summary.style.display='block';
     summary.textContent=hasIndex
-      ?`${loaded} images · ${mapped} names matched from cm-card-index.json · ready to search offline.`
-      :`${loaded} images ready. Place cm-card-index.json in your image folder for instant name matching, or names resolve as you search.`;
+      ?`${loaded} images · ${mapped} names matched from index · ready to search offline.`
+      :`${loaded} images ready. Place cm-card-index.json or cm-card-data.json in your image folder for instant name matching, or names resolve as you search.`;
   }
 
   cmLocalLibSave();
