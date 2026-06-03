@@ -503,7 +503,7 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
   <!-- ══ DECK ══ -->
   <div class="tab-panel" id="tab-deck">
     <div class="panel">
-      <h2>Deck Builder</h2>
+      <h2>Deck Builder <span id="deck-lib-loading-badge" style="display:none;font-size:.7rem;padding:2px 8px;border-radius:999px;background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;vertical-align:middle;margin-left:6px;">⏳ Library loading…</span></h2>
       <div class="row" style="margin-bottom:.4rem">
         <div class="f3"><input type="text" id="deck-card-search" placeholder="Search cards (online or uploaded)..."></div>
         <button class="btn sm sec" id="btn-deck-search">🔍</button>
@@ -607,14 +607,51 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
         <span id="local-lib-count" style="font-size:.72rem;color:var(--muted);margin-left:.5rem"></span>
       </div>
       <p style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem">
-        Select your downloaded card image folder. Files are matched to card names using the Master Duel database — no internet needed after setup.
+        Select your downloaded card image folder. Files are matched to card names using your card index — no internet needed after setup.
       </p>
+
+      <!-- Load mode selector -->
+      <div style="margin-bottom:.6rem">
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:.35rem;font-weight:600;">Load mode</div>
+        <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.35rem" id="lib-mode-group">
+
+          <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2)" title="Recommended for Chrome/Edge/modern Firefox. Stores images as binary — 33% smaller than Base64, faster loading, lower RAM.">
+            <input type="radio" name="lib-mode" value="full-blob" id="lib-mode-full-blob" checked onchange="CM_LOCAL_LIB_MODE=this.value;cmUpdateLibModeHint()">
+            📦 Full Library (Blob) <span style="font-size:.65rem;opacity:.7;margin-left:2px;">recommended</span>
+          </label>
+
+          <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2)" title="Maximum compatibility. Works on all browsers including older Firefox and Safari. Uses ~33% more storage than Blob.">
+            <input type="radio" name="lib-mode" value="full-b64" id="lib-mode-full-b64" onchange="CM_LOCAL_LIB_MODE=this.value;cmUpdateLibModeHint()">
+            📦 Full Library (Base64) <span style="font-size:.65rem;opacity:.7;margin-left:2px;">max compat</span>
+          </label>
+
+          <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2)" title="Only loads images for cards in your current deck and combo steps. Ideal for low-spec devices.">
+            <input type="radio" name="lib-mode" value="selective" id="lib-mode-selective" onchange="CM_LOCAL_LIB_MODE=this.value;cmUpdateLibModeHint()">
+            🎯 Deck &amp; combo cards only
+          </label>
+
+          <label id="lib-mode-live-label" title="Reads images from your folder on demand — nothing stored in memory or IndexedDB. Re-pick folder after each page refresh." style="display:flex;align-items:center;gap:5px;font-size:.78rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);cursor:not-allowed;opacity:.55">
+            <input type="radio" name="lib-mode" value="live" id="lib-mode-live" disabled style="cursor:not-allowed" onchange="CM_LOCAL_LIB_MODE=this.value;cmUpdateLibModeHint()">
+            <span id="lib-mode-live-text" style="text-decoration:line-through">⚡ Live folder (Chrome/Edge)</span>
+          </label>
+
+        </div>
+        <div id="lib-mode-hint" style="font-size:.72rem;color:var(--muted);padding:4px 8px;border-radius:6px;background:var(--surface3)">
+          Full Library (Blob): stores images in binary format. ~33% smaller than Base64, lower RAM, faster display. Recommended for most users.
+        </div>
+      </div>
+
+      <!-- Migration / storage format notice — shown only when relevant -->
+      <div id="lib-migration-notice" style="display:none;font-size:.72rem;color:var(--muted);padding:6px 10px;border-radius:6px;background:var(--surface3);border-left:3px solid var(--accent);margin-bottom:.5rem">
+      </div>
+
       <div class="btn-row" style="flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem">
-        <label class="btn" style="cursor:pointer;font-size:.82rem">
+        <label class="btn" style="cursor:pointer;font-size:.82rem" id="lib-select-btn-label" onclick="if(CM_LOCAL_LIB_MODE==='live'){event.preventDefault();cmLiveFolderOpen();}">
           📂 Select Card Folder
           <input type="file" id="local-lib-input" webkitdirectory multiple accept="image/*" style="display:none" onchange="cmLocalLibLoad(this)">
         </label>
         <button class="btn sec sm" onclick="cmLocalLibClear()">✕ Clear Library</button>
+        <button class="btn sec sm" onclick="cmLocalLibDBClear();toast('Local library storage cleared — reload to free memory','ok',4000)">🗑 Clear Stored Images</button>
       </div>
       <div id="local-lib-progress" style="display:none;margin-bottom:.5rem">
         <div style="background:var(--surface3);border-radius:4px;height:8px;overflow:hidden">
@@ -831,6 +868,7 @@ My Combo Name
       <p style="font-size:.8rem;color:var(--muted);margin-bottom:.6rem">Only removes Combo Master data. Browser history and other sites: unaffected.</p>
       <button class="btn danger" id="btn-reset-data">🗑 Reset All Data</button>
       <button class="btn" onclick="clearImageCache()" style="margin-left:.5rem">🖼 Clear Image Cache</button>
+      <button class="btn" onclick="cmLocalLibDBClear();CM_LOCAL_LIB={};CM_LOCAL_LIB_NAMES={};cmLocalLibUpdateCount();toast('Local library storage cleared','ok',3000)" style="margin-left:.5rem">📂 Clear Local Library Storage</button>
     </div>
   </div>
 
@@ -838,25 +876,205 @@ My Combo Name
   <div class="tab-panel" id="tab-about">
     <div class="panel">
       <h2>About Combo Master</h2>
-      <p>A portable, offline-capable browser tool for building and sharing card game combo guides. Works with custom cards.</p>
+      <p style="font-size:.82rem;line-height:1.6;margin-bottom:.9rem">A portable, offline-capable browser tool for building and sharing card game combo guides. Works with custom cards, local image libraries, and multiple card APIs. No installation required — runs entirely in your browser as a single HTML file.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+        <button class="btn sec sm" onclick="document.getElementById('about-general').scrollIntoView({behavior:'smooth'})">🚀 Getting Started</button>
+        <button class="btn sec sm" onclick="document.getElementById('about-viewer').scrollIntoView({behavior:'smooth'})">👁 Viewer</button>
+        <button class="btn sec sm" onclick="document.getElementById('about-editor').scrollIntoView({behavior:'smooth'})">✏️ Editor</button>
+        <button class="btn sec sm" onclick="document.getElementById('about-deck').scrollIntoView({behavior:'smooth'})">🃏 Deck Builder</button>
+        <button class="btn sec sm" onclick="document.getElementById('about-images').scrollIntoView({behavior:'smooth'})">🖼 Images &amp; Library</button>
+        <button class="btn sec sm" onclick="document.getElementById('about-json').scrollIntoView({behavior:'smooth'})">{ } JSON</button>
+        <button class="btn sec sm" onclick="document.getElementById('about-resources').scrollIntoView({behavior:'smooth'})">🔗 Resources</button>
+        <button class="btn sec sm" onclick="document.getElementById('about-settings').scrollIntoView({behavior:'smooth'})">⚙️ Settings</button>
+        <button class="btn sec sm" onclick="document.getElementById('about-tips').scrollIntoView({behavior:'smooth'})">💡 General Tips</button>
+      </div>
     </div>
+
+    <div class="panel" id="about-general">
+      <h3>🚀 Getting Started</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>First time?</strong> Head to the <strong>Editor</strong> tab, type a combo name, and start adding steps. Each step can have a card, a description, and optional interruption markers.</li>
+        <li><strong>Adding cards:</strong> Click the card slot in any step to open the card picker. Search online or browse your local library if you have one set up.</li>
+        <li><strong>Saving:</strong> Combos auto-save to your browser. Use <strong>Export → JSON</strong> to back them up as a file you can reload later or share.</li>
+        <li><strong>Sharing:</strong> Export your combo as a JSON file and send it — recipients import it via the <strong>Import</strong> button. No account needed.</li>
+        <li><strong>Offline use:</strong> Save this HTML file to your computer and open it directly. Everything works without internet once you have a local card library set up.</li>
+      </ul>
+    </div>
+
     <div class="panel">
-      <h3>Keyboard Shortcuts</h3>
-      <ul style="font-size:.82rem"><li><strong>← / →</strong> — Navigate steps (Viewer)</li><li><strong>Ctrl+Enter</strong> — Save combo (Editor)</li><li><strong>Escape</strong> — Close modals / picker</li></ul>
+      <h3>⌨ Keyboard Shortcuts</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>← / →</strong> — Navigate combo steps (Viewer)</li>
+        <li><strong>Ctrl+Enter</strong> — Save combo (Editor)</li>
+        <li><strong>Escape</strong> — Close modals, card picker, or overlays</li>
+        <li><strong>Ctrl+Z</strong> — Undo last step deletion (Editor)</li>
+        <li><strong>Click card image</strong> — Open full-size card art in Viewer</li>
+      </ul>
     </div>
+
+    <div class="panel" id="about-viewer">
+      <h3>👁 Viewer Tab Tips</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>Select a combo</strong> from the dropdown at the top — type to filter by name.</li>
+        <li><strong>← / → keys</strong> or Prev / Next buttons to step through. Clicking a card image opens full-size art.</li>
+        <li><strong>Flow View (⇄)</strong> shows all steps at once as a scrollable list — great for a quick overview or copying to text.</li>
+        <li><strong>Card size slider</strong> resizes cards in the Viewer independently of other tabs.</li>
+        <li><strong>Images / Interruptions checkboxes</strong> let you hide those elements for a cleaner read or faster printing.</li>
+        <li><strong>Step number alignment (№ Offset)</strong> toggles whether the step number sits offset above or inline with the text.</li>
+        <li><strong>▶ Play / cycle mode</strong> auto-advances through steps on a timer — useful for presenting combos to another player.</li>
+        <li><strong>+ Interruption</strong> lets you mark mid-combo disruption points without going back to the Editor.</li>
+        <li><strong>📋 Copy Interruptions</strong> copies all interruption notes to clipboard for quick sharing.</li>
+        <li><strong>🔀 Follow up</strong> appears when a combo has a follow-up combo linked — click to jump straight to it.</li>
+      </ul>
+    </div>
+
+    <div class="panel" id="about-editor">
+      <h3>✏️ Editor Tab Tips</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>+ New</strong> starts a blank combo. Type a name in the combo name field then add steps.</li>
+        <li><strong>Adding a card to a step:</strong> Click a card in the left search panel — it attaches to the currently active step. Or click the card slot icon within a step.</li>
+        <li><strong>☰ All / ▣ Single toggle:</strong> All mode shows every step at once (great for reordering). Single mode focuses one step at a time (faster on long combos).</li>
+        <li><strong>Drag to reorder:</strong> In All mode, grab the drag handle on a step and move it up or down.</li>
+        <li><strong>Step descriptions:</strong> Type the combo action text in the step description field. Markdown-style bold (<code>**text**</code>) is supported.</li>
+        <li><strong>Interruption markers:</strong> Add an interruption to any step from the step's + Interruption button. Set severity (low / medium / high / critical) to colour-code it.</li>
+        <li><strong>Follow-up combos:</strong> Link one combo as a follow-up to another using the Follow-up selector on any step.</li>
+        <li><strong>Ctrl+Enter</strong> saves the current combo without clicking the Save button.</li>
+        <li><strong>📄 Text export</strong> copies steps as plain readable text. <strong>📦 JSON export</strong> saves machine-readable data for import.</li>
+        <li><strong>Left panel resize:</strong> Drag the vertical split handle to give more space to the card search or the step sequence.</li>
+        <li><strong>Vertical resize handles</strong> inside the left panel let you adjust how much space the card search grid, custom cards grid, and icon grid each get.</li>
+        <li><strong>Annotation icons:</strong> Upload small icons in the Images tab then drag them onto steps as visual markers — handy for indicating card zones or game states.</li>
+      </ul>
+    </div>
+
+    <div class="panel" id="about-deck">
+      <h3>🃏 Deck Builder Tips</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>Sections:</strong> Organise your deck into custom sections (Main Deck, Extra Deck, Side Deck, etc.) using the + Section button.</li>
+        <li><strong>Drag to reorder:</strong> Cards within a section can be dragged to reorder them.</li>
+        <li><strong>Import from text:</strong> Paste a plain-text deck list (one card per line) and Combo Master will parse names and counts automatically.</li>
+        <li><strong>Card counts:</strong> Click the + / − buttons on a card to adjust copies. The total count shows in the section header.</li>
+        <li><strong>Selective library tip:</strong> Build your deck list first, then switch to 🎯 Deck &amp; combo cards only mode when loading your image folder — it'll only load exactly the images you need.</li>
+      </ul>
+    </div>
+
+    <div class="panel" id="about-images">
+      <h3>🖼 Images Tab &amp; Local Card Library</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>Download card images</strong> using the companion <em>API Image Downloader</em> tool. It fetches all YGOPRODeck images and saves them as password-ID-named JPGs (e.g. <code>46986414.jpg</code>).</li>
+        <li><strong>Export a card index</strong> using the downloader's 📋 Export Card Data → ⭐ Combo Master Index preset. Place <code>cm-card-data.json</code> in the same folder as your images.</li>
+        <li><strong>Select your folder</strong> in the Images tab → Local Card Library. Choose your load mode first.</li>
+        <li><strong>Load modes:</strong>
+          <ul style="margin-top:.3rem;margin-left:1rem;line-height:1.7">
+            <li>📦 <strong>Full Library (Blob)</strong> — recommended. Stores images as binary — ~33% smaller than Base64, lower RAM usage, faster display. Supported by Chrome, Edge, and modern Firefox. Automatically falls back to Base64 if your browser doesn't support it.</li>
+            <li>📦 <strong>Full Library (Base64)</strong> — maximum compatibility. Works on all browsers including older Firefox and Safari. Uses ~33% more storage. Choose this if you experience issues with Blob mode.</li>
+            <li>🎯 <strong>Deck &amp; combo cards only</strong> — only loads images for cards in your current deck and combos. Ideal for low-spec devices or tablets.</li>
+            <li>⚡ <strong>Live folder</strong> (Chrome/Edge only) — reads images from disk on demand. Zero memory overhead. Re-pick the folder after each refresh. Shown with strikethrough on unsupported browsers.</li>
+          </ul>
+        </li>
+        <li><strong>Switching between Blob and Base64?</strong> Your cached images will be cleared automatically on the next folder load — a notice will appear explaining this. Your image files on disk are untouched.</li>
+        <li><strong>Out of Memory?</strong> Go to Settings → Data Management → 📂 Clear Local Library Storage, then reload and use Selective or Live mode instead.</li>
+        <li><strong>Updating your library:</strong> Re-run the image downloader — it skips files already on disk and only downloads new cards. Re-export the card index to pick up new card names.</li>
+        <li><strong>Custom card images:</strong> Use JPEG at 250 × 350 px, ~50–60 KB per file. Compress with <a href="https://squoosh.app" target="_blank">Squoosh</a> before uploading. Large images slow the Editor significantly.</li>
+        <li><strong>Custom icons:</strong> Upload small icons (displayed at 56px) for use as step annotation markers in the Editor.</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h3>🔍 Search Tips</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>Fuzzy search:</strong> The local library search uses trigram + Levenshtein matching — "Dark Mag" finds "Dark Magician", "Magicain" (typo) still finds the right card.</li>
+        <li><strong>Partial names work:</strong> Try searching by archetype ("Tearlaments", "Spright") or by effect keyword if you remember the effect but not the name.</li>
+        <li><strong>Switching sources:</strong> The search source (YGOPRODeck, Local Library, etc.) is set from the Images tab → Card Search API dropdown. Switch mid-session any time.</li>
+        <li><strong>Local search slow to start?</strong> Wait for the "⏳ Loading local library…" placeholder to disappear before searching — the library loads asynchronously on startup.</li>
+        <li><strong>Card not in local library?</strong> Switch to online search temporarily, find the card, then switch back. The result is cached for the session.</li>
+        <li><strong>Deck Builder search</strong> also supports fuzzy and uses the same source as Editor. Use the 🔍 button or press Enter in the search field.</li>
+      </ul>
+    </div>
+
+    <div class="panel" id="about-json">
+      <h3>{ } JSON Converter Tips</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>What it does:</strong> Converts plain human-readable combo text into Combo Master JSON — and back again. Useful for drafting combos quickly in a text editor or notes app.</li>
+        <li><strong>Format:</strong> First line = combo name. Each step starts with a number and period (<code>1.</code>). Card names go in square brackets: <code>[Dark Magician]</code>. Multiple cards: <code>[Card A + Card B]</code>.</li>
+        <li><strong>Interruptions in text:</strong> Add a line starting with <code>!</code> after any step. Optionally add severity: <code>! Ash Blossom can negate (high)</code>.</li>
+        <li><strong>⬆ Import</strong> loads the converted JSON directly into Combo Master — no copy-paste needed.</li>
+        <li><strong>✔ Validate</strong> checks your JSON for errors before importing — run this if an import fails.</li>
+        <li><strong>← To Text</strong> converts existing JSON back to readable text — useful for reviewing or editing a combo outside the tool.</li>
+        <li><strong>Tip:</strong> Draft your combos in a notes app using the plain text format, paste into the JSON tab, convert, and import. Faster than building step-by-step in the Editor for long combos.</li>
+      </ul>
+    </div>
+
+    <div class="panel" id="about-resources">
+      <h3>🔗 Resources Tab Tips</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>What it is:</strong> A personal bookmark panel for Yu-Gi-Oh! links — deck lists, rulings, combo videos, team Discord servers, anything you reference often.</li>
+        <li><strong>Adding a link:</strong> Enter a name, URL, and optional description then click + Add. Links are saved to your browser and persist across sessions.</li>
+        <li><strong>Search Online:</strong> Search YGOPRODeck, Master Duel Meta, or Reddit directly from the Resources tab — results open in a new tab.</li>
+        <li><strong>Tip:</strong> Add links to your own combo video explanations or team resources so everything is in one place alongside your combo guides.</li>
+        <li><strong>Deleting a link:</strong> Each saved resource has a ✕ delete button. Changes save automatically.</li>
+      </ul>
+    </div>
+
+    <div class="panel" id="about-settings">
+      <h3>⚙️ Settings Tab Tips</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>Layout Mode:</strong> Auto adapts to screen size. Wide forces full width (good for large monitors). Narrow centres in a column (good for focused writing or small screens).</li>
+        <li><strong>Appearance:</strong> Change theme, fonts, UI scale, card sizes, and emoji scale. Each setting is independent — mix and match freely.</li>
+        <li><strong>Custom Theme:</strong> Override any colour individually. Export your theme to share or back it up.</li>
+        <li><strong>Proxy settings:</strong> Toggle the Worker proxy on/off, enter a custom proxy URL and secret token, or test connectivity with 🔌 Network Test.</li>
+        <li><strong>API Source:</strong> Switch between YGOPRODeck and Master Duel offline data for card searches. Master Duel offline works without internet.</li>
+        <li><strong>⚙ Worker Health:</strong> Pings your configured Worker and reports latency — useful for diagnosing slow image loads.</li>
+        <li><strong>🐛 Debug Panel:</strong> Shows internal state — API source, proxy status, cache size. Useful when troubleshooting search issues.</li>
+        <li><strong>Data Management:</strong> Reset All Data removes combos, decks, and settings but not your Local Library. Use the separate 📂 Clear Local Library Storage button for that.</li>
+      </ul>
+    </div>
+
+    <div class="panel" id="about-tips">
+      <h3>🎨 Themes &amp; Appearance</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>Themes:</strong> Pick from built-in themes in Settings → Appearance, or use Custom Theme to set your own accent and background colours.</li>
+        <li><strong>Fonts:</strong> Change the UI and heading font independently. Upload a custom font file (.ttf/.otf/.woff2) to use your own.</li>
+        <li><strong>UI scale:</strong> The UI Scale slider scales the entire interface — useful on 4K monitors or small screens.</li>
+        <li><strong>Card size:</strong> Each tab (Viewer, Editor, Deck) has its own card size slider. Adjust them independently to suit your workflow.</li>
+        <li><strong>Background image:</strong> Set a custom background image from Settings → Appearance. Supports transparency/blur via the Panel Blur slider.</li>
+        <li><strong>Export theme:</strong> Save your full appearance config (theme, fonts, scales) as a JSON file and import it on another device to sync your look.</li>
+      </ul>
+    </div>
+
     <div class="panel">
       <h3>🖨 Printing Tips</h3>
       <ul style="font-size:.82rem;line-height:1.75">
         <li>Use the <strong>🖨 Print Combo</strong> button in the header to print a clean, card-art-included version of any combo.</li>
-        <li>First select your combo in the <strong>Viewer</strong> tab, then click Print Combo — it opens a focused print window with just the steps, card images and interruptions.</li>
+        <li>Select your combo in the <strong>Viewer</strong> tab first, then click Print Combo — it opens a focused print window with just the steps, card images and interruptions.</li>
         <li>For a quick text-only version, use the <strong>⇄ Flow View</strong> in the Viewer tab and use your browser's built-in print (Ctrl+P / Cmd+P).</li>
-        <li>Resize cards from the <strong>Viewer</strong> tab card size slider before printing — experiment to find the size you prefer.</li>
+        <li>Resize cards from the Viewer tab card size slider before printing — smaller cards fit more per page.</li>
+        <li>In browser print settings, enable <strong>Background graphics</strong> to preserve theme colours and card borders.</li>
       </ul>
     </div>
+
     <div class="panel">
-      <h3>📸 Custom Card Image Tips</h3>
-      <p style="font-size:.82rem;line-height:1.75">For best performance, use <strong>JPEG</strong> images at a recommended resolution of <strong>250 × 350 px</strong> and roughly <strong>50–60 KB</strong> per file. Large or high-resolution images (PNG, full-art scans, etc.) are stored as base64 in the browser and can significantly slow the tool — especially in the Editor with many steps. If the tool feels sluggish after uploading custom cards, try compressing your images with a tool like <a href="https://squoosh.app" target="_blank">Squoosh</a> before re-uploading.</p>
+      <h3>💾 Backup &amp; Data Tips</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>Export regularly:</strong> Use the Export button to save your combos as a JSON file. Browser storage can be cleared by browser updates, privacy tools, or "Clear site data".</li>
+        <li><strong>Importing:</strong> Drag a JSON export onto the page or use the Import button. Existing combos with the same name will be overwritten — rename before importing if you want to keep both.</li>
+        <li><strong>Multiple devices:</strong> Export on one device, import on another. No cloud sync needed.</li>
+        <li><strong>Theme export:</strong> Export your appearance settings separately so you don't have to reconfigure after a reset.</li>
+        <li><strong>Reset All Data</strong> in Settings → Data Management removes all combos, decks, and settings. It does <em>not</em> clear your Local Library (that's a separate button).</li>
+      </ul>
     </div>
+
+    <div class="panel">
+      <h3>⚡ Proxy &amp; Performance Tips</h3>
+      <ul style="font-size:.82rem;line-height:1.85">
+        <li><strong>What is the proxy?</strong> Card images are fetched via a Cloudflare Worker proxy by default. This avoids CORS issues when loading images from external APIs in the browser.</li>
+        <li><strong>Proxy OFF:</strong> Disabling the proxy sends image requests directly to the source API. This is faster but may fail in some browser/network configurations.</li>
+        <li><strong>Custom proxy:</strong> Run your own Cloudflare Worker proxy (see the companion API Image Downloader tool for the full worker template) and enter its URL + secret token in Settings → Proxy.</li>
+        <li><strong>Slow image loading?</strong> Try toggling the proxy on/off. If on a VPN, direct requests may be faster. Run 🔌 Network Test in Settings to diagnose.</li>
+        <li><strong>Tool feels sluggish?</strong> Most likely cause is too many large custom card images stored as base64. Compress them with <a href="https://squoosh.app" target="_blank">Squoosh</a> (target ~50KB JPEG, 250×350px) then re-upload.</li>
+        <li><strong>IndexedDB full?</strong> Storing 14k images in the browser's IndexedDB uses 700MB–2GB of storage. Use Settings → Data Management → 📂 Clear Local Library Storage to free it, then switch to Live folder or Selective mode.</li>
+      </ul>
+    </div>
+
     <div class="panel">
       <h3>📜 Licence</h3>
       <p style="font-size:.82rem;line-height:1.7">
@@ -1777,7 +1995,23 @@ function exportSingleAsJson(){const name=document.getElementById('edit-name').va
 
 // ── CARD SEARCH ──
 let searchTO;
-function handleCardSearch(q){clearTimeout(searchTO);if(!q.trim()){document.getElementById('card-grid').innerHTML='<div class="empty-msg" style="grid-column:1/-1">Type to search.</div>';return;}searchTO=setTimeout(()=>fetchCards(q,document.getElementById('card-grid'),document.getElementById('search-spin'),false),320);}
+function handleCardSearch(q){
+  clearTimeout(searchTO);
+  const grid=document.getElementById('card-grid');
+  if(!q.trim()){
+    grid.innerHTML='<div class="empty-msg" style="grid-column:1/-1">Type to search.</div>';
+    return;
+  }
+  // If using local library and it's still loading, show hint and retry
+  const usingLocal = S.imgSources[S.cardSearchApiIdx]?.url==='locallibrary://';
+  if(usingLocal && !CM_LOCAL_LIB_READY){
+    grid.innerHTML='<div class="empty-msg" style="grid-column:1/-1">⏳ Local library loading — try again in a moment…</div>';
+    clearTimeout(searchTO);
+    searchTO=setTimeout(()=>handleCardSearch(q),1200);
+    return;
+  }
+  searchTO=setTimeout(()=>fetchCards(q,grid,document.getElementById('search-spin'),false),320);
+}
 function applyEditorSearchScale(){
   const px=Math.round(110*S.editorSearchScale/100);
   const grid=document.getElementById('card-grid');
@@ -2017,6 +2251,10 @@ async function cmSearch(q,apiIdx){
 
   if(url==='locallibrary://'){
     const r=await cmLocalLibSearch(q);
+    if(r==='__loading__'){
+      grid.innerHTML='<div class="empty-msg" style="grid-column:1/-1">⏳ Local library loading — please wait a moment…</div>';
+      return;
+    }
     if(!r.length)toast('No results in Local Library — card names are resolved via search history. Try searching with another source first, then switch to Local Library.','warn',5000);
     return r;
   }
@@ -2615,7 +2853,20 @@ document.addEventListener('DOMContentLoaded',()=>{
     const as=document.getElementById('apiSourceSelect');
     if(as)as.value=CM_API_SOURCE||'ygoprodeck';
     cmBgRestoreFromStorage();
-  cmLocalLibRestore();
+  cmLocalLibRestore().then(()=>{
+    // placeholder updated inside restore; also set it to loading state immediately
+    // if IDB appears to have data (we check by attempting a quick open)
+  });
+  // Set placeholder/badge to loading if local library source is selected
+  (function(){
+    const idx=ld('cardSearchApiIdx',0);
+    const sources=ld('imgSources',null);
+    const isLocal=sources?sources[idx]?.url==='locallibrary://':false;
+    const inp=document.getElementById('card-search-input');
+    if(inp&&isLocal) inp.placeholder='⏳ Loading local library…';
+    const dlb=document.getElementById('deck-lib-loading-badge');
+    if(dlb&&isLocal) dlb.style.display='';
+  })();
   })();
   migrate();
   cmLoadCardCache(); // restore search result cache from localStorage
@@ -2708,6 +2959,28 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('btn-import').addEventListener('click',importCombos);
   document.getElementById('btn-export-all').addEventListener('click',exportAllCombos);
   document.getElementById('card-search-input').addEventListener('input',e=>handleCardSearch(e.target.value));
+
+  // Live folder: enable fully if File System Access API available, else strikethrough + disabled
+  (function(){
+    const liveLabel = document.getElementById('lib-mode-live-label');
+    const liveInput = document.getElementById('lib-mode-live');
+    const liveText  = document.getElementById('lib-mode-live-text');
+    if('showDirectoryPicker' in window){
+      // Fully supported — remove strikethrough, enable input, normal cursor
+      if(liveLabel){ liveLabel.style.cursor='pointer'; liveLabel.style.opacity='1'; }
+      if(liveInput){ liveInput.disabled=false; liveInput.style.cursor='pointer'; }
+      if(liveText)  liveText.style.textDecoration='none';
+    } else {
+      // Not supported — keep strikethrough, ensure unclickable
+      if(liveLabel){
+        liveLabel.style.cursor='not-allowed';
+        liveLabel.title='Requires Chrome or Edge (File System Access API not available in this browser)';
+        liveLabel.addEventListener('click', e=>e.preventDefault());
+      }
+    }
+  })();
+  // Init lib mode hint
+  cmUpdateLibModeHint();
   document.getElementById('btn-mode-flow').addEventListener('click',()=>setEditorMode('flow'));
   document.getElementById('btn-mode-step').addEventListener('click',()=>setEditorMode('step'));
   // Draggable resize handle between card search and sequence panels
@@ -3173,6 +3446,13 @@ function cmBgRestoreFromStorage(){
 // CM_LOCAL_LIB_NAMES stores: passwordId → resolved card name (populated lazily)
 let CM_LOCAL_LIB = {};
 let CM_LOCAL_LIB_NAMES = {}; // id → name, built from card cache + YGO lookups
+let CM_LOCAL_LIB_READY = false; // true once IndexedDB restore is complete
+let CM_LOCAL_LIB_MODE = 'full-blob'; // 'full-blob' | 'full-b64' | 'selective' | 'live'
+const CM_IDB_VERSION_KEY  = 'cm_lib_storage_version';
+const CM_IDB_VERSION_BLOB = 2; // Blob storage
+const CM_IDB_VERSION_B64  = 1; // Base64 storage (legacy)
+let CM_LIVE_DIR_HANDLE = null;  // FileSystemDirectoryHandle for live folder mode
+let CM_LIVE_DIR_FILES  = null;  // Map<stem, FileSystemFileHandle> built on folder open
 
 function cmLocalLibUpdateCount(){
   const n=Object.keys(CM_LOCAL_LIB).length;
@@ -3180,8 +3460,193 @@ function cmLocalLibUpdateCount(){
   if(el)el.textContent=n?`(${n} images loaded — names resolve on search)`:'';
 }
 
+// ── Blob Storage Helpers ──
+// Used by full-blob mode. Falls back to Base64 if browser rejects Blob in IDB.
+
+let CM_BLOB_SUPPORTED = null; // null=untested, true/false after first attempt
+
+async function cmTestBlobSupport(db){
+  if(CM_BLOB_SUPPORTED !== null) return CM_BLOB_SUPPORTED;
+  try{
+    const testBlob = new Blob(['test'],{type:'text/plain'});
+    await new Promise((res,rej)=>{
+      const tx=db.transaction('images','readwrite');
+      const req=tx.objectStore('images').put(testBlob,'__blob_test__');
+      req.onsuccess=()=>res();
+      req.onerror=()=>rej(req.error);
+    });
+    // Clean up test entry
+    await new Promise(res=>{
+      const tx=db.transaction('images','readwrite');
+      tx.objectStore('images').delete('__blob_test__');
+      tx.oncomplete=res;
+    });
+    CM_BLOB_SUPPORTED = true;
+  }catch(e){
+    CM_BLOB_SUPPORTED = false;
+  }
+  return CM_BLOB_SUPPORTED;
+}
+
+function cmShowMigrationNotice(msg){
+  const el=document.getElementById('lib-migration-notice');
+  if(!el) return;
+  el.innerHTML = msg + ' <a href="#" style="color:var(--accent)" onclick="event.preventDefault();document.getElementById(\'about-images\').scrollIntoView({behavior:\'smooth\'});document.querySelector(\'[data-tab=about]\').click()">See About → Images &amp; Library</a>';
+  el.style.display='block';
+  setTimeout(()=>{ el.style.display='none'; }, 18000); // auto-hide after 18s
+}
+
+// Check stored IDB version and clear if switching between Blob/Base64
+async function cmCheckStorageVersion(db, targetVersion){
+  return new Promise(res=>{
+    const tx=db.transaction('images','readwrite');
+    const req=tx.objectStore('images').get('__storage_version__');
+    req.onsuccess=()=>{
+      const stored=req.result;
+      const storedVer = stored && typeof stored==='object' && stored.v ? stored.v
+                      : typeof stored==='number' ? stored : null;
+      if(storedVer !== null && storedVer !== targetVersion){
+        // Format changed — clear all cached images
+        const clearReq=tx.objectStore('images').clear();
+        clearReq.onsuccess=()=>{
+          // Write new version flag
+          const putTx=db.transaction('images','readwrite');
+          putTx.objectStore('images').put({v:targetVersion},'__storage_version__');
+          putTx.oncomplete=()=>{
+            cmShowMigrationNotice(
+              storedVer < targetVersion
+                ? '⚡ Library storage upgraded to Blob format. Your cached images were cleared — please re-select your folder.'
+                : '📦 Library storage switched to Base64 format. Your cached images were cleared — please re-select your folder.'
+            );
+            res(true); // was migrated
+          };
+        };
+      } else {
+        // Write version flag if missing
+        if(storedVer===null){
+          const putTx=db.transaction('images','readwrite');
+          putTx.objectStore('images').put({v:targetVersion},'__storage_version__');
+          putTx.oncomplete=()=>res(false);
+        } else {
+          res(false); // no migration needed
+        }
+      }
+    };
+    req.onerror=()=>res(false);
+  });
+}
+
+// ── Live Folder Mode (File System Access API) ──
+// Reads images directly from disk on demand — zero memory overhead.
+// Folder handle expires on page refresh; user re-picks each session.
+
+async function cmLiveFolderOpen(){
+  if(!('showDirectoryPicker' in window)){
+    toast('Live folder mode requires Chrome or Edge','danger',4000);
+    return;
+  }
+  const prog   = document.getElementById('local-lib-progress');
+  const bar    = document.getElementById('local-lib-bar');
+  const status = document.getElementById('local-lib-status');
+  prog.style.display='block';
+  bar.style.width='0%';
+  status.textContent='Opening folder…';
+  try{
+    CM_LIVE_DIR_HANDLE = await window.showDirectoryPicker({mode:'read'});
+    CM_LIVE_DIR_FILES  = new Map(); // stem → FileSystemFileHandle
+    let count=0;
+    for await(const [name, handle] of CM_LIVE_DIR_HANDLE.entries()){
+      if(handle.kind==='file' && /\.(jpe?g|png|webp|gif)$/i.test(name)){
+        const stem=name.replace(/\.[^/.]+$/,'').trim();
+        CM_LIVE_DIR_FILES.set(stem, handle);
+        count++;
+      }
+    }
+    CM_LOCAL_LIB_READY = true;
+    bar.style.width='100%';
+    status.textContent=`⚡ Live folder ready — ${count} images indexed. Images load on demand.`;
+    const summary=document.getElementById('local-lib-summary');
+    if(summary){
+      summary.style.display='block';
+      summary.textContent=`⚡ Live mode: ${count} images available · reads from disk as needed · re-pick folder after refresh.`;
+    }
+    cmLocalLibUpdateCount();
+    const dlb=document.getElementById('deck-lib-loading-badge');
+    if(dlb) dlb.style.display='none';
+    const inp=document.getElementById('card-search-input');
+    if(inp) inp.placeholder='Search local library…';
+    toast(`Live folder ready — ${count} images indexed`,'ok',3000);
+  }catch(e){
+    if(e.name!=='AbortError'){
+      status.textContent='Failed to open folder: '+e.message;
+      toast('Folder open failed: '+e.message,'danger',4000);
+    } else {
+      status.textContent='Folder selection cancelled.';
+      prog.style.display='none';
+    }
+  }
+}
+
+// Called when an image is needed in live mode — reads the file from disk and returns a dataURL
+async function cmLiveFolderGetImage(stem){
+  if(!CM_LIVE_DIR_FILES) return null;
+  const handle = CM_LIVE_DIR_FILES.get(stem);
+  if(!handle) return null;
+  try{
+    const file = await handle.getFile();
+    return await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=e=>res(e.target.result);
+      r.onerror=rej;
+      r.readAsDataURL(file);
+    });
+  }catch(e){
+    console.warn('Live folder read failed for',stem,e);
+    return null;
+  }
+}
+
+// cmLocalLibUpdateCount: also count live folder files if in live mode
+// (override the count display to reflect live files)
+
+// ── Library mode hint updater ──
+function cmUpdateLibModeHint(){
+  const hints={
+    'full-blob': 'Full Library (Blob): binary storage — ~33% smaller than Base64, lower RAM, faster display. Recommended for Chrome, Edge, and modern Firefox. Falls back to Base64 silently if your browser does not support Blob in IndexedDB.',
+    'full-b64':  'Full Library (Base64): maximum browser compatibility — works on all browsers including older Firefox and Safari. Uses ~33% more storage than Blob. Best choice if you experience issues with the Blob option.',
+    'selective': 'Deck & combo cards only: loads images only for cards in your current deck list and combo steps. Lightweight — ideal for low-spec devices, tablets, or large collections.',
+    'live':      'Live folder: reads images directly from disk on demand. Zero memory overhead, nothing stored in IndexedDB. Chrome/Edge only (File System Access API). Re-pick your folder after each page refresh.'
+  };
+  const el=document.getElementById('lib-mode-hint');
+  if(el) el.textContent=hints[CM_LOCAL_LIB_MODE]||hints['full-blob'];
+  const lbl=document.getElementById('lib-select-btn-label');
+  if(lbl) lbl.childNodes[0].textContent = CM_LOCAL_LIB_MODE==='live' ? '⚡ Open Live Folder ' : '📂 Select Card Folder ';
+}
+
+// Build set of card IDs needed by current deck + combos
+function cmGetNeededCardIds(){
+  const needed=new Set();
+  // From decklist
+  for(const entry of (S.decklist||[])){
+    if(entry?.name) needed.add(entry.name.toLowerCase());
+  }
+  // From all combo steps
+  for(const [,combo] of Object.entries(S.combos||{})){
+    for(const step of (combo.steps||[])){
+      if(step.card) needed.add(step.card.toLowerCase());
+    }
+  }
+  return needed;
+}
+
 async function cmLocalLibLoad(input){
+  // ── Live folder mode: use File System Access API instead of file input ──
+  if(CM_LOCAL_LIB_MODE === 'live'){
+    await cmLiveFolderOpen();
+    return;
+  }
   const allFiles=Array.from(input.files);
+  const useBlob = CM_LOCAL_LIB_MODE === 'full-blob';
 
   // Check for cm-card-index.json OR cm-card-data.json in the uploaded folder
   // Accepts three formats produced by the API Image Downloader export tool:
@@ -3242,27 +3707,97 @@ async function cmLocalLibLoad(input){
   const status=document.getElementById('local-lib-status');
   prog.style.display='block';
 
-  let loaded=0, done=0;
-  const total=files.length;
+  // ── Selective mode: only load images for cards in deck + combos ──
+  // We match by: password ID (filename stem) via CM_LOCAL_LIB_NAMES, OR card name
+  let filesToLoad = files;
+  if(CM_LOCAL_LIB_MODE === 'selective'){
+    const neededNames = cmGetNeededCardIds(); // lowercased card names
+    // Also build a set of needed password IDs from the name index
+    const neededIds = new Set();
+    for(const [id,name] of Object.entries(CM_LOCAL_LIB_NAMES)){
+      if(neededNames.has(name.toLowerCase())) neededIds.add(id);
+    }
+    filesToLoad = files.filter(f=>{
+      const stem = f.name.replace(/\.[^/.]+$/,'').trim();
+      // Match by password ID (stem is numeric) or by name-derived ID
+      return neededIds.has(stem) || neededIds.size === 0; // fallback: load all if no index yet
+    });
+    status.textContent=`Selective mode: ${filesToLoad.length} of ${files.length} images match your deck/combos…`;
+    if(!filesToLoad.length && neededIds.size === 0){
+      // No index loaded yet — warn and fall back to full load
+      filesToLoad = files;
+      status.textContent=`No card index loaded — falling back to full load (${files.length} images). Load a card index first for selective mode.`;
+    }
+  }
 
-  // Store every image by its filename stem (the YGOPRODeck password ID)
-  const BATCH=100;
+  let loaded=0, done=0;
+  const total=filesToLoad.length;
+
+  // Determine whether to use Blob storage (full-blob mode only)
+  // Test browser support on first run; fall back to Base64 if rejected
+  let actuallyUseBlob = false;
+  if(useBlob){
+    // We need the IDB handle — get it via cmLocalLibSave's db, or open directly
+    try{
+      const testDb = await new Promise((res,rej)=>{
+        const r=indexedDB.open('cm_local_lib',1);
+        r.onsuccess=()=>res(r.result);
+        r.onerror=()=>rej(r.error);
+        r.onupgradeneeded=e=>{
+          if(!e.target.result.objectStoreNames.contains('images'))
+            e.target.result.createObjectStore('images');
+        };
+      });
+      actuallyUseBlob = await cmTestBlobSupport(testDb);
+      await cmCheckStorageVersion(testDb, actuallyUseBlob ? CM_IDB_VERSION_BLOB : CM_IDB_VERSION_B64);
+      testDb.close();
+      if(!actuallyUseBlob){
+        cmShowMigrationNotice('ℹ️ Your browser does not support Blob storage in IndexedDB — switched to Base64 automatically. Everything will still work.');
+        // Switch radio to base64 so the hint reflects reality
+        const b64Radio = document.getElementById('lib-mode-full-b64');
+        if(b64Radio){ b64Radio.checked=true; CM_LOCAL_LIB_MODE='full-b64'; cmUpdateLibModeHint(); }
+      }
+    }catch(e){ actuallyUseBlob=false; }
+  } else {
+    // For full-b64 mode, still check version so switching back from blob clears IDB
+    try{
+      const testDb = await new Promise((res,rej)=>{
+        const r=indexedDB.open('cm_local_lib',1);
+        r.onsuccess=()=>res(r.result);
+        r.onerror=()=>rej(r.error);
+        r.onupgradeneeded=e=>{
+          if(!e.target.result.objectStoreNames.contains('images'))
+            e.target.result.createObjectStore('images');
+        };
+      });
+      await cmCheckStorageVersion(testDb, CM_IDB_VERSION_B64);
+      testDb.close();
+    }catch(e){}
+  }
+
+  // Store images by filename stem (the YGOPRODeck password ID)
+  const BATCH = CM_LOCAL_LIB_MODE==='selective' ? 200 : actuallyUseBlob ? 60 : 80;
   for(let i=0;i<total;i+=BATCH){
-    const batch=files.slice(i,i+BATCH);
+    const batch=filesToLoad.slice(i,i+BATCH);
     await Promise.all(batch.map(file=>new Promise(resolve=>{
       const stem=file.name.replace(/\.[^/.]+$/,'').trim();
       if(!stem){done++;resolve();return;}
-      const r=new FileReader();
-      r.onload=e=>{
-        CM_LOCAL_LIB[stem]=e.target.result;
+      if(actuallyUseBlob){
+        // Store as raw Blob — no encoding overhead, ~33% smaller
+        CM_LOCAL_LIB[stem] = file; // keep File reference in memory
         loaded++;done++;resolve();
-      };
-      r.onerror=()=>{done++;resolve();};
-      r.readAsDataURL(file);
+      } else {
+        // Store as Base64 dataURL — maximum browser compatibility
+        const r=new FileReader();
+        r.onload=e=>{ CM_LOCAL_LIB[stem]=e.target.result; loaded++;done++;resolve(); };
+        r.onerror=()=>{ done++;resolve(); };
+        r.readAsDataURL(file);
+      }
     })));
     const pct=Math.round((done/total)*100);
     bar.style.width=pct+'%';
-    status.textContent=`Loaded ${loaded} of ${done} processed (${total-done} remaining)…`;
+    const modeLabel = actuallyUseBlob ? ' [Blob mode]' : CM_LOCAL_LIB_MODE==='selective' ? ' [selective mode]' : ' [Base64 mode]';
+    status.textContent=`Loaded ${loaded} of ${done} processed (${total-done} remaining)…${modeLabel}`;
     await new Promise(r=>setTimeout(r,0));
   }
 
@@ -3336,8 +3871,17 @@ function cmLocalLibDB(mode){
 async function cmLocalLibSave(){
   try{
     const store=await cmLocalLibDB('readwrite');
+    // Write storage version flag so migration detection works on restore
+    const ver = CM_LOCAL_LIB_MODE==='full-blob' ? CM_IDB_VERSION_BLOB : CM_IDB_VERSION_B64;
+    store.put({name:'__storage_version__', img: String(ver)});
     for(const [id,img] of Object.entries(CM_LOCAL_LIB)){
-      store.put({name:id,img});
+      if(img instanceof Blob || img instanceof File){
+        // Store Blob/File as binary — compact, no base64 inflation
+        const blob = img instanceof File ? img.slice(0, img.size, img.type) : img;
+        store.put({name:id, img:blob});
+      } else {
+        store.put({name:id, img});
+      }
     }
     // Save name map as special entry
     if(Object.keys(CM_LOCAL_LIB_NAMES).length){
@@ -3352,21 +3896,56 @@ async function cmLocalLibRestore(){
     const store=await cmLocalLibDB('readonly');
     const req=store.getAll();
     req.onsuccess=()=>{
+      // Check stored version — if switching between Blob/Base64, clear and show notice
+      const versionEntry = req.result.find(r=>r.name==='__storage_version__');
+      if(versionEntry){
+        const storedVer = parseInt(versionEntry.img, 10);
+        const targetVer = CM_LOCAL_LIB_MODE==='full-blob' ? CM_IDB_VERSION_BLOB : CM_IDB_VERSION_B64;
+        if(storedVer !== targetVer){
+          // Format mismatch — clear IDB and show migration notice
+          cmLocalLibDBClear().then(()=>{
+            cmShowMigrationNotice(
+              storedVer < targetVer
+                ? '⚡ Library storage upgraded to Blob format. Your cached images were cleared — please re-select your folder.'
+                : '📦 Library storage switched to Base64 format. Your cached images were cleared — please re-select your folder.'
+            );
+          });
+          CM_LOCAL_LIB_READY = true;
+          return;
+        }
+      }
       for(const {name,img} of req.result){
         if(name==='__names__'){
           try{const n=JSON.parse(img);Object.assign(CM_LOCAL_LIB_NAMES,n);}catch{}
+        } else if(name==='__storage_version__'){
+          // skip — version flag, not an image
         } else {
+          // img may be Blob (from blob mode) or string (from base64 mode) — store as-is
           CM_LOCAL_LIB[name]=img;
         }
       }
       cmLocalLibSeedNamesFromCache();
       cmLocalLibUpdateCount();
+      CM_LOCAL_LIB_READY = true;
+      // Update dynamic placeholder now that library is ready
+      const csi = document.getElementById('card-search-input');
+      if(csi && csi.placeholder.includes('Loading')){
+        csi.placeholder = Object.keys(CM_LOCAL_LIB).length
+          ? 'Search local library…'
+          : 'Search YGO cards...';
+      }
       if(Object.keys(CM_LOCAL_LIB).length){
         const s=document.getElementById('local-lib-summary');
         if(s){s.style.display='block';s.textContent=`${Object.keys(CM_LOCAL_LIB).length} images in local library · names resolve on search.`;}
+        // Show deck tab loading badge as done
+        const dlb = document.getElementById('deck-lib-loading-badge');
+        if(dlb) dlb.style.display='none';
       }
     };
-  }catch(e){console.warn('Local lib IDB restore failed:',e);}
+  }catch(e){
+    console.warn('Local lib IDB restore failed:',e);
+    CM_LOCAL_LIB_READY = true; // mark ready even on failure so searches aren't blocked
+  }
 }
 
 async function cmLocalLibDBClear(){
@@ -3380,25 +3959,118 @@ async function cmLocalLibDBClear(){
 // Search: 1) check name map for already-resolved IDs
 //          2) check card cache for password from prior YGO searches
 //          3) async enrich: fetch from YGOPRODeck, map password→name, update cache
-async function cmLocalLibSearch(q){
-  if(!Object.keys(CM_LOCAL_LIB).length)return[];
-  const ql=q.toLowerCase();
+// ── Fuzzy matching helpers ──
+// Trigram similarity: splits strings into overlapping 3-char chunks and measures overlap.
+// Fast enough for 14k in-memory names, gives good "Dark Mag" → "Dark Magician" matching.
+function cmTrigramSet(str){
+  const s=' '+str.toLowerCase()+' ';
+  const t=new Set();
+  for(let i=0;i<s.length-2;i++) t.add(s.slice(i,i+3));
+  return t;
+}
+function cmTrigramScore(a,b){
+  if(!a||!b)return 0;
+  const ta=cmTrigramSet(a), tb=cmTrigramSet(b);
+  let inter=0; for(const x of ta) if(tb.has(x)) inter++;
+  return(2*inter)/(ta.size+tb.size);
+}
+// Simple Levenshtein for short strings (typo correction)
+function cmLevenshtein(a,b){
+  const m=a.length,n=b.length;
+  const dp=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i||j));
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+// Combined score: prefers substring match, then trigram, then typo tolerance
+function cmFuzzyScore(query,name){
+  const q=query.toLowerCase(), n=name.toLowerCase();
+  if(n.includes(q)) return 1+(q.length/n.length); // substring match, longer = better
+  const tg=cmTrigramScore(q,n);
+  if(tg>0.3) return tg;
+  // Levenshtein on first word as typo fallback (only for short queries)
+  if(q.length>=3&&q.length<=12){
+    const firstWord=n.split(' ')[0];
+    const lev=cmLevenshtein(q,firstWord);
+    const maxLen=Math.max(q.length,firstWord.length);
+    const levScore=(maxLen-lev)/maxLen;
+    if(levScore>0.6) return levScore*0.8;
+  }
+  return 0;
+}
 
-  // Reseed names from cache each search (new searches may have populated it)
+async function cmLocalLibSearch(q){
+  // ── Live folder mode: search by name index, load images on demand ──
+  if(CM_LOCAL_LIB_MODE === 'live'){
+    if(!CM_LIVE_DIR_FILES) return [];
+    if(!CM_LOCAL_LIB_READY) return '__loading__';
+    cmLocalLibSeedNamesFromCache();
+    // Fuzzy search through name index to find matching stems
+    const scored=[];
+    for(const [id,name] of Object.entries(CM_LOCAL_LIB_NAMES)){
+      if(!CM_LIVE_DIR_FILES.has(id)) continue;
+      const score=cmFuzzyScore(q,name);
+      if(score>0) scored.push({score,name,id});
+    }
+    scored.sort((a,b)=>b.score-a.score);
+    const top=scored.slice(0,20);
+    // Load images from disk for matched cards
+    const out=[];
+    for(const {name,id} of top){
+      let img=CM_LOCAL_LIB[id]; // check memory cache first
+      if(!img){
+        img=await cmLiveFolderGetImage(id);
+        if(img) CM_LOCAL_LIB[id]=img; // cache in memory for this session
+      }
+      if(img) out.push({name,img});
+    }
+    // If no name index yet, fall back to API fuzzy
+    if(!out.length){
+      try{
+        const cards=await cmYgoproFuzzy(q);
+        if(cards&&cards.length){
+          for(const card of cards.slice(0,20)){
+            const m=card.img&&card.img.match(/\/([0-9]+)\.jpg/);
+            if(m&&CM_LIVE_DIR_FILES.has(m[1])){
+              let img=CM_LOCAL_LIB[m[1]];
+              if(!img){ img=await cmLiveFolderGetImage(m[1]); if(img) CM_LOCAL_LIB[m[1]]=img; }
+              if(img){ CM_LOCAL_LIB_NAMES[m[1]]=card.name; out.push({name:card.name,img}); }
+            }
+          }
+        }
+      }catch(e){}
+    }
+    return out;
+  }
+
+  if(!Object.keys(CM_LOCAL_LIB).length) return [];
+
+  // If library isn't ready yet, return a sentinel so the caller can show a hint
+  if(!CM_LOCAL_LIB_READY) return '__loading__';
+
+  const ql = q.toLowerCase();
   cmLocalLibSeedNamesFromCache();
 
-  // Build results from already-resolved names
-  const results=[];
-  for(const [id,name] of Object.entries(CM_LOCAL_LIB_NAMES)){
-    if(name.toLowerCase().includes(ql)&&CM_LOCAL_LIB[id]){
-      results.push({name,img:CM_LOCAL_LIB[id]});
-      if(results.length>=20)break;
-    }
+  // ── Fuzzy search across all resolved names ──
+  // Resolve image: Blob/File → object URL, string → base64 dataURL used directly
+  function cmResolveImg(id){
+    const entry=CM_LOCAL_LIB[id];
+    if(!entry) return null;
+    if(typeof entry==='string') return entry;
+    if(entry instanceof Blob || entry instanceof File) return URL.createObjectURL(entry);
+    return null;
   }
-  if(results.length)return results;
+  const scored = [];
+  for(const [id,name] of Object.entries(CM_LOCAL_LIB_NAMES)){
+    if(!CM_LOCAL_LIB[id]) continue;
+    const score = cmFuzzyScore(q, name);
+    if(score > 0) scored.push({score, name, id});
+  }
+  scored.sort((a,b)=>b.score-a.score);
+  const fuzzyResults = scored.slice(0,20).map(x=>{ const img=cmResolveImg(x.id); return img?{name:x.name,img}:null; }).filter(Boolean);
+  if(fuzzyResults.length) return fuzzyResults;
 
-  // No resolved names match — try YGOPRODeck fuzzy to find password→name mapping
-  // This populates the cache so next search is instant
+  // No local names matched — try YGOPRODeck fuzzy to resolve password→name
   try{
     const cards=await cmYgoproFuzzy(q);
     if(cards?.length){
