@@ -86,12 +86,12 @@ label input[type=checkbox]{width:auto}
 /* Scrollable steps area so card search sidebar stays visible */
 #seq-drop{max-height:68vh;overflow-y:auto;scrollbar-width:thin}
 /* Drag handle between card search and sequence panels */
-.split-handle{width:10px;flex-shrink:0;cursor:col-resize;background:var(--border);border-radius:3px;margin:0 4px;align-self:stretch;min-height:60px;transition:background .2s;position:relative}
+.split-handle{width:16px;flex-shrink:0;cursor:col-resize;background:var(--border);border-radius:4px;margin:0 5px;align-self:stretch;min-height:60px;transition:background .2s;position:relative}
 .split-handle:hover,.split-handle.dragging{background:var(--accent)}
 .split-handle::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:16px;background-image:radial-gradient(circle,rgba(255,255,255,.55) 1.5px,transparent 1.5px);background-size:4px 5.5px;background-repeat:repeat;pointer-events:none}
 .split-handle:hover::after,.split-handle.dragging::after{background-image:radial-gradient(circle,rgba(255,255,255,.9) 1.5px,transparent 1.5px)}
 /* Vertical resize handles inside the card search panel */
-.vresize-handle{height:10px;background:var(--border);border-radius:3px;cursor:ns-resize;margin:.3rem 0;transition:background .2s;flex-shrink:0;position:relative}
+.vresize-handle{height:16px;background:var(--border);border-radius:4px;cursor:ns-resize;margin:.4rem 0;transition:background .2s;flex-shrink:0;position:relative}
 .vresize-handle:hover,.vresize-handle.dragging{background:var(--accent)}
 .vresize-handle::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:16px;height:4px;background-image:radial-gradient(circle,rgba(255,255,255,.55) 1.5px,transparent 1.5px);background-size:5.5px 4px;background-repeat:repeat;pointer-events:none}
 .vresize-handle:hover::after,.vresize-handle.dragging::after{background-image:radial-gradient(circle,rgba(255,255,255,.9) 1.5px,transparent 1.5px)}
@@ -370,7 +370,7 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
     </div>
     <div id="viewer-controls" style="display:none;margin-bottom:.5rem">
       <div class="row" style="gap:.5rem;align-items:center;flex-wrap:wrap">
-        <div class="scale-row">Card size: <input type="range" id="card-scale-slider" min="20" max="500" value="100"><span class="scale-lbl" id="card-scale-lbl">100%</span></div>
+        <div class="scale-row">Card size: <input type="range" id="card-scale-slider" min="20" max="500" value="100"><span class="scale-lbl" id="card-scale-lbl">100%</span> <button class="btn sec sm" style="font-size:.7rem;padding:2px 7px;margin-left:4px" onclick="cmReApplyAutoScale()" title="Re-apply auto-detected sizes for your screen">📐 Auto</button></div>
         <label><input type="checkbox" id="step-show-images" checked> Images</label>
         <label><input type="checkbox" id="step-show-ints" checked> Interruptions</label>
         <button class="btn xs sec" id="btn-viewer-num-offset" title="Toggle step number: offset (top-aligned) vs inline (center-aligned)">№ Offset</button>
@@ -615,16 +615,6 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
         <div style="font-size:.75rem;color:var(--muted);margin-bottom:.35rem;font-weight:600;">Load mode</div>
         <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.35rem" id="lib-mode-group">
 
-          <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2)" title="Recommended for Chrome/Edge/modern Firefox. Stores images as binary — 33% smaller than Base64, faster loading, lower RAM.">
-            <input type="radio" name="lib-mode" value="full-blob" id="lib-mode-full-blob" checked onchange="CM_LOCAL_LIB_MODE=this.value;cmUpdateLibModeHint()">
-            📦 Full Library (Blob) <span style="font-size:.65rem;opacity:.7;margin-left:2px;">recommended</span>
-          </label>
-
-          <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2)" title="Maximum compatibility. Works on all browsers including older Firefox and Safari. Uses ~33% more storage than Blob.">
-            <input type="radio" name="lib-mode" value="full-b64" id="lib-mode-full-b64" onchange="CM_LOCAL_LIB_MODE=this.value;cmUpdateLibModeHint()">
-            📦 Full Library (Base64) <span style="font-size:.65rem;opacity:.7;margin-left:2px;">max compat</span>
-          </label>
-
           <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2)" title="Only loads images for cards in your current deck and combo steps. Ideal for low-spec devices.">
             <input type="radio" name="lib-mode" value="selective" id="lib-mode-selective" onchange="CM_LOCAL_LIB_MODE=this.value;cmUpdateLibModeHint()">
             🎯 Deck &amp; combo cards only
@@ -633,6 +623,16 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
           <label id="lib-mode-live-label" title="Reads images from your folder on demand — nothing stored in memory or IndexedDB. Re-pick folder after each page refresh." style="display:flex;align-items:center;gap:5px;font-size:.78rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);cursor:not-allowed;opacity:.55">
             <input type="radio" name="lib-mode" value="live" id="lib-mode-live" disabled style="cursor:not-allowed" onchange="CM_LOCAL_LIB_MODE=this.value;cmUpdateLibModeHint()">
             <span id="lib-mode-live-text" style="text-decoration:line-through">⚡ Live folder (Chrome/Edge)</span>
+          </label>
+
+          <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2)" title="Recommended for Chrome/Edge/modern Firefox. Stores images as binary — 33% smaller than Base64, faster loading, lower RAM.">
+            <input type="radio" name="lib-mode" value="full-blob" id="lib-mode-full-blob" checked onchange="CM_LOCAL_LIB_MODE=this.value;cmUpdateLibModeHint()">
+            📦 Full Library (Blob) <span style="font-size:.65rem;opacity:.7;margin-left:2px;">recommended</span>
+          </label>
+
+          <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2)" title="Maximum compatibility. Works on all browsers including older Firefox and Safari. Uses ~33% more storage than Blob.">
+            <input type="radio" name="lib-mode" value="full-b64" id="lib-mode-full-b64" onchange="CM_LOCAL_LIB_MODE=this.value;cmUpdateLibModeHint()">
+            📦 Full Library (Base64) <span style="font-size:.65rem;opacity:.7;margin-left:2px;">max compat</span>
           </label>
 
         </div>
@@ -660,6 +660,7 @@ body.layout-portrait .followup-modal-box{width:min(440px,88vw)}
         <div id="local-lib-status" style="font-size:.72rem;color:var(--muted);margin-top:.3rem">Loading…</div>
       </div>
       <div id="local-lib-summary" style="display:none;font-size:.78rem;color:var(--muted)"></div>
+      <div id="live-loaded-count" style="display:none;font-size:.75rem;color:var(--muted);margin-top:.25rem;padding:4px 8px;border-radius:6px;background:var(--surface3)"></div>
     </div>
   </div>
 
@@ -2840,6 +2841,7 @@ function loadEmbeddedState(){const el=document.getElementById('emd');if(!el)retu
 // ══ INIT ══
 document.addEventListener('DOMContentLoaded',()=>{
   loadEmbeddedState();loadAll();
+  cmApplyAutoScale(); // first-visit only — no-op for returning users
   // Sync proxy UI to loaded prefs — must run AFTER loadAll inside DOMContentLoaded
   (function(){
     const pb=document.getElementById('proxyToggleBtn');
@@ -2871,10 +2873,114 @@ document.addEventListener('DOMContentLoaded',()=>{
   migrate();
   cmLoadCardCache(); // restore search result cache from localStorage
   hiddenFonts=new Set(S.hiddenFonts||[]);
+// ── Auto-scale: calculate sensible defaults based on screen resolution ──
+// Only runs on first visit (no saved values). Returns object of suggested values.
+function cmAutoScale(){
+  const sw = window.screen.width;
+  const sh = window.screen.height;
+  const dpr = window.devicePixelRatio || 1;
+  // Logical resolution (CSS pixels)
+  const lw = sw / dpr;
+  const lh = sh / dpr;
+
+  // Card scale (Viewer) — how big combo step cards appear
+  // Base: 100% at 1080p. Scale up for larger screens, down for smaller.
+  const cardScale = Math.round(Math.min(Math.max(lw / 1920 * 160, 60), 220));
+
+  // Editor search card scale — cards in the left search panel
+  const editorSearchScale = Math.round(Math.min(Math.max(lw / 1920 * 130, 60), 160));
+
+  // Editor step card scale
+  const editorScale = Math.round(Math.min(Math.max(lw / 1920 * 140, 60), 200));
+
+  // Deck card size (px) — cards in deck builder
+  const deckScale = Math.round(Math.min(Math.max(lw / 1920 * 90, 45), 140));
+
+  // Deck search card size (px)
+  const deckSearchScale = Math.round(Math.min(Math.max(lw / 1920 * 110, 55), 160));
+
+  // Uploaded card image display size (px)
+  const cardImgScale = Math.round(Math.min(Math.max(lw / 1920 * 110, 55), 180));
+
+  // UI scale — overall font/element scaling
+  // At 1080p → 150%, 4K → 200%, 720p → 120%
+  const uiScale = Math.round(Math.min(Math.max(lh / 1080 * 150, 100), 220));
+
+  return { cardScale, editorSearchScale, editorScale, deckScale, deckSearchScale, cardImgScale, uiScale,
+           screen: `${sw}×${sh}`, dpr, logical: `${Math.round(lw)}×${Math.round(lh)}` };
+}
+
+function cmReApplyAutoScale(){
+  // Manually triggered — always applies, regardless of saved values
+  const sc = cmAutoScale();
+  S.cardScale          = sc.cardScale;
+  S.editorScale        = sc.editorScale;
+  S.editorSearchScale  = sc.editorSearchScale;
+  S.deckScale          = sc.deckScale;
+  S.deckSearchScale    = sc.deckSearchScale;
+  S.cardImgScale       = sc.cardImgScale;
+  S.uiScale            = sc.uiScale;
+  sv('cardScale',S.cardScale); sv('editorScale',S.editorScale);
+  sv('editorSearchScale',S.editorSearchScale); sv('deckScale',S.deckScale);
+  sv('deckSearchScale',S.deckSearchScale); sv('cardImgScale',S.cardImgScale);
+  sv('uiScale',S.uiScale);
+  // Sync all sliders
+  syncSl('card-scale-slider','card-scale-lbl',S.cardScale,'%');
+  syncSl('editor-scale-slider','editor-scale-lbl',S.editorScale,'%');
+  syncSl('editor-search-scale-slider','editor-search-scale-lbl',S.editorSearchScale,'%');
+  syncSl('deck-scale-slider','deck-scale-lbl',S.deckScale,'px');
+  syncSl('deck-search-scale-slider','deck-search-scale-lbl',S.deckSearchScale,'px');
+  syncSl('card-img-scale-slider','card-img-scale-lbl',S.cardImgScale,'px');
+  applyUIScale(S.uiScale);
+  document.getElementById('ui-scale-slider').value = S.uiScale;
+  document.getElementById('ui-scale-lbl').textContent = S.uiScale+'%';
+  renderSeqSteps(); renderSES(); renderDeckUI(); renderImagesGrid();
+  toast(`📐 Sizes reset to auto-detected for ${sc.screen} (${sc.logical} logical px)`,'ok',4000);
+}
+
+function cmApplyAutoScale(){
+  // Only apply if this is a fresh first visit — no saved slider values exist
+  const hasCardScale = localStorage.getItem(SK+'cardScale') !== null;
+  if(hasCardScale) return; // returning user — leave their settings alone
+
+  const sc = cmAutoScale();
+  S.cardScale          = sc.cardScale;
+  S.editorScale        = sc.editorScale;
+  S.editorSearchScale  = sc.editorSearchScale;
+  S.deckScale          = sc.deckScale;
+  S.deckSearchScale    = sc.deckSearchScale;
+  S.cardImgScale       = sc.cardImgScale;
+  S.uiScale            = sc.uiScale;
+
+  // Persist so next visit uses saved values
+  sv('cardScale',       S.cardScale);
+  sv('editorScale',     S.editorScale);
+  sv('editorSearchScale', S.editorSearchScale);
+  sv('deckScale',       S.deckScale);
+  sv('deckSearchScale', S.deckSearchScale);
+  sv('cardImgScale',    S.cardImgScale);
+  sv('uiScale',         S.uiScale);
+
+  // Store a flag so we can show the one-time toast
+  sv('autoScaleApplied', '1');
+  console.log('[AutoScale] Applied for', sc.screen, 'DPR:'+sc.dpr, '→', sc);
+}
+
   applyTheme(S.themeIndex);applyFonts();applyUIScale(S.uiScale);applyLayout(S.layoutMode);
   document.documentElement.style.setProperty('--emoji-scale',S.emojiScale+'rem');
 
   const syncSl=(id,lb,val,suf)=>{const el=document.getElementById(id),lbl=document.getElementById(lb);if(el)el.value=val;if(lbl)lbl.textContent=val+suf;};
+  // Show one-time toast if auto-scale was just applied this session
+  if(ld('autoScaleApplied','') === '1'){
+    sv('autoScaleApplied','done'); // mark as shown
+    const sc = cmAutoScale();
+    setTimeout(()=>{
+      toast(
+        `📐 Card sizes auto-set for your screen (${sc.screen} · ${sc.logical} logical px). Adjust sliders in each tab anytime.`,
+        'ok', 7000
+      );
+    }, 1200);
+  }
   syncSl('card-scale-slider','card-scale-lbl',S.cardScale,'%');
   syncSl('editor-scale-slider','editor-scale-lbl',S.editorScale,'%');
   syncSl('editor-search-scale-slider','editor-search-scale-lbl',S.editorSearchScale,'%');
@@ -3235,12 +3341,22 @@ async function cmNetworkTest(){
       cmDebugLog(label+': '+(res?'✅ OK':'❌ null/fail'));
     }catch(e){cmDebugLog(label+': ❌ '+e.message);}
   }
-  // Worker test — ALWAYS use raw fetch to avoid double-proxying
-  const workerBase=CM_PROXY_CUSTOM||'https://cmw.cm-v1.workers.dev/?url=';
-  const workerTestUrl=workerBase+encodeURIComponent('https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician');
+  // Worker test — use raw fetch with token to avoid double-proxying
   try{
+    const testTarget = 'https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician';
+    const workerTestUrl = CM_PROXY_CUSTOM
+      ? (CM_PROXY_CUSTOM + (CM_PROXY_CUSTOM.includes('?')?'&':'?') + 'url=' + encodeURIComponent(testTarget) + (CM_PROXY_TOKEN ? '&token='+encodeURIComponent(CM_PROXY_TOKEN) : ''))
+      : (CM_DEFAULT_WORKER + '?token=' + CM_DEFAULT_TOKEN + '&url=' + encodeURIComponent(testTarget));
+    const t0=Date.now();
     const res=await fetch(workerTestUrl);
-    cmDebugLog('Worker: '+(res.ok?'✅ OK (HTTP '+res.status+')':'❌ HTTP '+res.status));
+    const ms=Date.now()-t0;
+    if(res.ok){
+      cmDebugLog('Worker: ✅ OK (HTTP '+res.status+' · '+ms+'ms)');
+    } else if(res.status===401){
+      cmDebugLog('Worker: ⚠ HTTP 401 — token mismatch. Check proxy token in Settings.');
+    } else {
+      cmDebugLog('Worker: ❌ HTTP '+res.status);
+    }
   }catch(e){cmDebugLog('Worker: ❌ '+e.message);}
   cmDebugLog('Test complete.');
 }
@@ -3583,6 +3699,8 @@ async function cmLiveFolderOpen(){
       summary.style.display='block';
       summary.textContent=`⚡ Live mode: ${count} images available · reads from disk as needed · re-pick folder after refresh.`;
     }
+    // Show live loaded counter
+    cmLiveUpdateLoadedCount();
     cmLocalLibUpdateCount();
     const dlb=document.getElementById('deck-lib-loading-badge');
     if(dlb) dlb.style.display='none';
@@ -3598,6 +3716,20 @@ async function cmLiveFolderOpen(){
       prog.style.display='none';
     }
   }
+}
+
+// Update the live loaded count display
+function cmLiveUpdateLoadedCount(){
+  const el = document.getElementById('live-loaded-count');
+  if(!el) return;
+  if(CM_LOCAL_LIB_MODE !== 'live' || !CM_LIVE_DIR_FILES){
+    el.style.display = 'none';
+    return;
+  }
+  const total   = CM_LIVE_DIR_FILES.size;
+  const loaded  = Object.keys(CM_LOCAL_LIB).length;
+  el.style.display = 'block';
+  el.textContent = `⚡ Live: ${loaded} of ${total} images loaded into session cache · ${total - loaded} remaining on disk`;
 }
 
 // Called when an image is needed in live mode — reads the file from disk and returns a dataURL
@@ -4033,7 +4165,7 @@ async function cmLocalLibSearch(q){
       let img=CM_LOCAL_LIB[id]; // check memory cache first
       if(!img){
         img=await cmLiveFolderGetImage(id);
-        if(img) CM_LOCAL_LIB[id]=img; // cache in memory for this session
+        if(img){ CM_LOCAL_LIB[id]=img; cmLiveUpdateLoadedCount(); } // cache in memory
       }
       if(img) out.push({name,img});
     }
