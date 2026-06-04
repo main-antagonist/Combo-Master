@@ -3252,7 +3252,7 @@ async function cmWorkerHealthCheck(){
   cmDebugLog('Checking Worker health…');
   try{
     // Build health check URL the same way cmFetch does — with token + url params
-    const healthUrl = buildProxyUrl('https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician');
+    const healthUrl = cmBuildProxiedUrl('https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician');
     const t0 = Date.now();
     const res = await fetch(healthUrl);
     const ms = Date.now() - t0;
