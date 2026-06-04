@@ -3251,8 +3251,16 @@ async function cmWorkerHealthCheck(){
   panel.innerHTML='';
   cmDebugLog('Checking Worker health…');
   try{
-    // Build health check URL the same way cmFetch does — with token + url params
-    const healthUrl = cmBuildProxiedUrl('https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician');
+    // Use the same constants the rest of Combo Master uses — avoids any scope issues
+    const testTarget = 'https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician';
+    const workerBase = CM_PROXY_CUSTOM || CM_DEFAULT_WORKER;
+    const tok = CM_PROXY_CUSTOM
+      ? (CM_PROXY_TOKEN ? '&token='+encodeURIComponent(CM_PROXY_TOKEN) : '')
+      : ('?token='+CM_DEFAULT_TOKEN);
+    const sep = CM_PROXY_CUSTOM ? (workerBase.includes('?')?'&':'?') : '';
+    const healthUrl = CM_PROXY_CUSTOM
+      ? workerBase + sep + 'url=' + encodeURIComponent(testTarget) + tok
+      : CM_DEFAULT_WORKER + '?token=' + CM_DEFAULT_TOKEN + '&url=' + encodeURIComponent(testTarget);
     const t0 = Date.now();
     const res = await fetch(healthUrl);
     const ms = Date.now() - t0;
