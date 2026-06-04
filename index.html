@@ -3250,14 +3250,19 @@ async function cmWorkerHealthCheck(){
   if(panel)panel.style.display='block';
   panel.innerHTML='';
   cmDebugLog('Checking Worker health…');
-  const workerBase=CM_PROXY_CUSTOM||'https://cmw.cm-v1.workers.dev/?url=';
-  const testUrl=workerBase+encodeURIComponent('https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician');
   try{
-    const res=await fetch(testUrl);
+    // Build health check URL the same way cmFetch does — with token + url params
+    const healthUrl = buildProxyUrl('https://db.ygoprodeck.com/api/v7/cardinfo.php?name=Dark+Magician');
+    const t0 = Date.now();
+    const res = await fetch(healthUrl);
+    const ms = Date.now() - t0;
     if(res.ok){
-      cmDebugLog('Worker: ✅ reachable (HTTP '+res.status+')');
+      cmDebugLog('Worker: ✅ reachable (HTTP '+res.status+' · '+ms+'ms)');
+    } else if(res.status === 401){
+      cmDebugLog('Worker: ⚠ HTTP 401 — token mismatch or missing. Check your proxy token in Settings.');
+      _cmLastError='Worker 401 Unauthorized';
     } else {
-      cmDebugLog('Worker: ⚠ HTTP '+res.status);
+      cmDebugLog('Worker: ⚠ HTTP '+res.status+' ('+ms+'ms)');
       _cmLastError='Worker HTTP '+res.status;
     }
   }catch(e){
